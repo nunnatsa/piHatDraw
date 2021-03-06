@@ -43,6 +43,9 @@ func (c *Controller) do() {
 
 	c.hat.Start()
 
+	msg := c.state.CreateDisplayMessage()
+	c.screenEvents <- msg
+
 	for {
 		changed := false
 
