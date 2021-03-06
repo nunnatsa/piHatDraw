@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"testing"
+
 	"github.com/nunnatsa/piHatDraw/common"
 	"github.com/nunnatsa/piHatDraw/state"
-	"testing"
 )
 
 func TestControllerStart(t *testing.T) {

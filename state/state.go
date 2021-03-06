@@ -1,8 +1,9 @@
 package state
 
 import (
-	"github.com/nunnatsa/piHatDraw/common"
 	"log"
+
+	"github.com/nunnatsa/piHatDraw/common"
 )
 
 const (

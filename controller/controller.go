@@ -1,12 +1,13 @@
 package controller
 
 import (
-	"github.com/nunnatsa/piHatDraw/common"
-	"github.com/nunnatsa/piHatDraw/hat"
-	"github.com/nunnatsa/piHatDraw/state"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/nunnatsa/piHatDraw/common"
+	"github.com/nunnatsa/piHatDraw/hat"
+	"github.com/nunnatsa/piHatDraw/state"
 )
 
 type Controller struct {
