@@ -27,13 +27,20 @@ func TestControllerStart(t *testing.T) {
 		state:          s,
 	}
 
-	c.Start()
-
 	y := s.Cursor.Y
 	x := s.Cursor.X
 
-	hat.MoveDown()
+	c.Start()
 	msg := <-se
+	if msg.CursorX != x {
+		t.Errorf("msg.CursorX should be %d but it's %d", x, msg.CursorX)
+	}
+	if msg.CursorY != y {
+		t.Errorf("msg.CursorY should be %d but it's %d", y, msg.CursorY)
+	}
+
+	hat.MoveDown()
+	msg = <-se
 	if msg.CursorY != y+1 {
 		t.Errorf("msg.CursorY should be %d but it's %d", y+1, msg.CursorY)
 	}
