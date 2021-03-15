@@ -23,13 +23,39 @@ const (
 
 const defaultJoystickFile = "/dev/input/event0"
 
+// Joystick events
+type Event uint8
+
+const (
+	Pressed Event = iota
+	MoveUp
+	MoveLeft
+	MoveDown
+	MoveRight
+)
+
+// HAT display events
+type DisplayMessage struct {
+	Screen  [][]common.Color
+	CursorX uint8
+	CursorY uint8
+}
+
+func NewDisplayMessage(mat [][]common.Color, x, y uint8) DisplayMessage {
+	return DisplayMessage{
+		Screen:  mat,
+		CursorX: x,
+		CursorY: y,
+	}
+}
+
 type Hat struct {
-	events chan<- common.HatEvent
-	screen <-chan *common.DisplayMessage
+	events chan<- Event
+	screen <-chan DisplayMessage
 	input  *stick.Device
 }
 
-func NewHat(joystickEvents chan<- common.HatEvent, screenEvents <-chan *common.DisplayMessage) *Hat {
+func NewHat(joystickEvents chan<- Event, screenEvents <-chan DisplayMessage) *Hat {
 	return &Hat{events: joystickEvents, screen: screenEvents}
 }
 
@@ -56,23 +82,23 @@ func (h *Hat) do() {
 		case event := <-h.input.Events:
 			switch event.Code {
 			case stick.Enter:
-				h.events <- common.Pressed
+				h.events <- Pressed
 				log.Println("Joystick Event: Pressed")
 
 			case stick.Up:
-				h.events <- common.MoveUp
+				h.events <- MoveUp
 				log.Println("Joystick Event: MoveUp")
 
 			case stick.Down:
-				h.events <- common.MoveDown
+				h.events <- MoveDown
 				log.Println("Joystick Event: MoveDown")
 
 			case stick.Left:
-				h.events <- common.MoveLeft
+				h.events <- MoveLeft
 				log.Println("Joystick Event: MoveLeft")
 
 			case stick.Right:
-				h.events <- common.MoveRight
+				h.events <- MoveRight
 				log.Println("Joystick Event: MoveRight")
 			}
 
@@ -82,7 +108,7 @@ func (h *Hat) do() {
 	}
 }
 
-func (h *Hat) drawScreen(screenChange *common.DisplayMessage) {
+func (h *Hat) drawScreen(screenChange DisplayMessage) {
 	fb := screen.NewFrameBuffer()
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {

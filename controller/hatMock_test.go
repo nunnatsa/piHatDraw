@@ -1,26 +1,28 @@
 package controller
 
-import "github.com/nunnatsa/piHatDraw/common"
+import (
+	"github.com/nunnatsa/piHatDraw/hat"
+)
 
 type hatMock struct {
-	je chan common.HatEvent
-	se chan *common.DisplayMessage
+	je chan hat.Event
+	se chan hat.DisplayMessage
 }
 
 func (h *hatMock) MoveUp() {
-	h.je <- common.MoveUp
+	h.je <- hat.MoveUp
 }
 
 func (h *hatMock) MoveDown() {
-	h.je <- common.MoveDown
+	h.je <- hat.MoveDown
 }
 
 func (h *hatMock) MoveRight() {
-	h.je <- common.MoveRight
+	h.je <- hat.MoveRight
 }
 
 func (h *hatMock) MoveLeft() {
-	h.je <- common.MoveLeft
+	h.je <- hat.MoveLeft
 }
 
 func (h *hatMock) Start() {
@@ -28,5 +30,5 @@ func (h *hatMock) Start() {
 }
 
 func (h *hatMock) Press() {
-	h.je <- common.Pressed
+	h.je <- hat.Pressed
 }

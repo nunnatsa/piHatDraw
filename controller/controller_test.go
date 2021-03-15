@@ -3,15 +3,16 @@ package controller
 import (
 	"testing"
 
-	"github.com/nunnatsa/piHatDraw/common"
+	"github.com/nunnatsa/piHatDraw/hat"
+
 	"github.com/nunnatsa/piHatDraw/state"
 )
 
 func TestControllerStart(t *testing.T) {
 	s := state.NewState()
-	je := make(chan common.HatEvent)
-	se := make(chan *common.DisplayMessage)
-	hat := &hatMock{
+	je := make(chan hat.Event)
+	se := make(chan hat.DisplayMessage)
+	hatMock := &hatMock{
 		je: je,
 		se: se,
 	}
@@ -20,7 +21,7 @@ func TestControllerStart(t *testing.T) {
 	defer close(done)
 
 	c := &Controller{
-		hat:            hat,
+		hat:            hatMock,
 		joystickEvents: je,
 		screenEvents:   se,
 		done:           done,
@@ -39,31 +40,31 @@ func TestControllerStart(t *testing.T) {
 		t.Errorf("msg.CursorY should be %d but it's %d", y, msg.CursorY)
 	}
 
-	hat.MoveDown()
+	hatMock.MoveDown()
 	msg = <-se
 	if msg.CursorY != y+1 {
 		t.Errorf("msg.CursorY should be %d but it's %d", y+1, msg.CursorY)
 	}
 
-	hat.MoveUp()
+	hatMock.MoveUp()
 	msg = <-se
 	if msg.CursorY != y {
 		t.Errorf("msg.CursorY should be %d but it's %d", y, msg.CursorY)
 	}
 
-	hat.MoveRight()
+	hatMock.MoveRight()
 	msg = <-se
 	if msg.CursorX != x+1 {
 		t.Errorf("msg.CursorX should be %d but it's %d", x+1, msg.CursorY)
 	}
 
-	hat.MoveLeft()
+	hatMock.MoveLeft()
 	msg = <-se
 	if msg.CursorY != x {
 		t.Errorf("msg.CursorX should be %d but it's %d", x, msg.CursorY)
 	}
 
-	hat.Press()
+	hatMock.Press()
 	msg = <-se
 	if !msg.Screen[y][x] {
 		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
