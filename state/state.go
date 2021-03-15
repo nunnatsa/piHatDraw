@@ -3,6 +3,8 @@ package state
 import (
 	"log"
 
+	"github.com/nunnatsa/piHatDraw/hat"
+
 	"github.com/nunnatsa/piHatDraw/common"
 )
 
@@ -81,12 +83,12 @@ func (s *State) PaintPixel() bool {
 	return false
 }
 
-func (s State) CreateDisplayMessage() *common.DisplayMessage {
+func (s State) CreateDisplayMessage() hat.DisplayMessage {
 	c := make([][]common.Color, common.WindowSize)
 	for y := 0; y < common.WindowSize; y++ {
 		c[y] = make([]common.Color, 0, common.WindowSize)
 		c[y] = append(c[y], s.Canvas[y]...)
 	}
 
-	return common.NewDisplayMessage(c, s.Cursor.X, s.Cursor.Y)
+	return hat.NewDisplayMessage(c, s.Cursor.X, s.Cursor.Y)
 }

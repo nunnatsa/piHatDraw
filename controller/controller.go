@@ -5,22 +5,21 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/nunnatsa/piHatDraw/common"
 	"github.com/nunnatsa/piHatDraw/hat"
 	"github.com/nunnatsa/piHatDraw/state"
 )
 
 type Controller struct {
 	hat            hat.Interface
-	joystickEvents chan common.HatEvent
-	screenEvents   chan *common.DisplayMessage
+	joystickEvents chan hat.Event
+	screenEvents   chan hat.DisplayMessage
 	done           chan bool
 	state          *state.State
 }
 
 func NewController() *Controller {
-	je := make(chan common.HatEvent)
-	se := make(chan *common.DisplayMessage)
+	je := make(chan hat.Event)
+	se := make(chan hat.DisplayMessage)
 
 	return &Controller{
 		hat:            hat.NewHat(je, se),
@@ -55,19 +54,19 @@ func (c *Controller) do() {
 
 		case je := <-c.joystickEvents:
 			switch je {
-			case common.MoveUp:
+			case hat.MoveUp:
 				changed = c.state.GoUp()
 
-			case common.MoveLeft:
+			case hat.MoveLeft:
 				changed = c.state.GoLeft()
 
-			case common.MoveDown:
+			case hat.MoveDown:
 				changed = c.state.GoDown()
 
-			case common.MoveRight:
+			case hat.MoveRight:
 				changed = c.state.GoRight()
 
-			case common.Pressed:
+			case hat.Pressed:
 				changed = c.state.PaintPixel()
 			}
 		}
