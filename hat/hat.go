@@ -11,6 +11,7 @@ import (
 
 type Interface interface {
 	Start()
+	Stop()
 }
 
 // The format of the HAT color is 16-bit: 5 MS bits are the red color, the middle 6 bits are
@@ -52,16 +53,25 @@ func NewDisplayMessage(mat [][]common.Color, x, y uint8) DisplayMessage {
 type Hat struct {
 	events chan<- Event
 	screen <-chan DisplayMessage
+	done   chan bool
 	input  *stick.Device
 }
 
 func NewHat(joystickEvents chan<- Event, screenEvents <-chan DisplayMessage) *Hat {
-	return &Hat{events: joystickEvents, screen: screenEvents}
+	return &Hat{
+		events: joystickEvents,
+		screen: screenEvents,
+		done:   make(chan bool),
+	}
 }
 
 func (h *Hat) Start() {
 	h.init()
 	go h.do()
+}
+
+func (h *Hat) Stop() {
+	h.done <- true
 }
 
 func (h *Hat) init() {
@@ -77,6 +87,8 @@ func (h *Hat) init() {
 }
 
 func (h *Hat) do() {
+	defer h.gracefulShutDown()
+
 	for {
 		select {
 		case event := <-h.input.Events:
@@ -104,6 +116,9 @@ func (h *Hat) do() {
 
 		case screenChange := <-h.screen:
 			h.drawScreen(screenChange)
+
+		case <-h.done:
+			return
 		}
 	}
 }
@@ -122,4 +137,10 @@ func (h *Hat) drawScreen(screenChange DisplayMessage) {
 	if err != nil {
 		log.Println("error while printing to HAT display:", err)
 	}
+}
+
+func (h Hat) gracefulShutDown() {
+	screen.Clear()
+	// signal the controller we've done
+	close(h.events)
 }

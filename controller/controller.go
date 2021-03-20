@@ -40,6 +40,8 @@ func (c *Controller) do() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
+	defer c.stop(signals)
+
 	c.hat.Start()
 
 	msg := c.state.CreateDisplayMessage()
@@ -74,7 +76,16 @@ func (c *Controller) do() {
 
 		if changed {
 			msg := c.state.CreateDisplayMessage()
-			c.screenEvents <- msg
+			go func() {
+				c.screenEvents <- msg
+			}()
 		}
 	}
+}
+
+func (c *Controller) stop(signals chan os.Signal) {
+	c.hat.Stop()
+	<-c.joystickEvents // wait for the hat graceful shutdown
+	signal.Stop(signals)
+	close(c.done)
 }

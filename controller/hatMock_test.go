@@ -9,6 +9,14 @@ type hatMock struct {
 	se chan hat.DisplayMessage
 }
 
+func (h *hatMock) Start() {
+	/* Implement hat.Interface */
+}
+
+func (h *hatMock) Stop() {
+	close(h.je)
+}
+
 func (h *hatMock) MoveUp() {
 	h.je <- hat.MoveUp
 }
@@ -23,10 +31,6 @@ func (h *hatMock) MoveRight() {
 
 func (h *hatMock) MoveLeft() {
 	h.je <- hat.MoveLeft
-}
-
-func (h *hatMock) Start() {
-
 }
 
 func (h *hatMock) Press() {
