@@ -52,7 +52,6 @@ func (c *Controller) do() {
 
 		select {
 		case <-signals:
-			close(c.done)
 			return
 
 		case je := <-c.joystickEvents:
