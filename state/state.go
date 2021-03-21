@@ -16,12 +16,13 @@ const (
 type canvas [][]common.Color
 
 type cursor struct {
-	X, Y uint8
+	X uint8 `json:"x"`
+	Y uint8 `json:"y"`
 }
 
 type State struct {
-	Canvas canvas
-	Cursor cursor
+	Canvas canvas `json:"canvas,omitempty"`
+	Cursor cursor `json:"cursor,omitempty"`
 }
 
 func NewState() *State {

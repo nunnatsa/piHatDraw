@@ -1,9 +1,14 @@
 package controller
 
 import (
+	"encoding/json"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/nunnatsa/piHatDraw/notifier"
+	"github.com/nunnatsa/piHatDraw/webapp"
 
 	"github.com/nunnatsa/piHatDraw/hat"
 	"github.com/nunnatsa/piHatDraw/state"
@@ -15,9 +20,11 @@ type Controller struct {
 	screenEvents   chan hat.DisplayMessage
 	done           chan bool
 	state          *state.State
+	notifier       *notifier.Notifier
+	clientEvents   <-chan webapp.ClientEvent
 }
 
-func NewController() *Controller {
+func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.ClientEvent) *Controller {
 	je := make(chan hat.Event)
 	se := make(chan hat.DisplayMessage)
 
@@ -27,6 +34,8 @@ func NewController() *Controller {
 		screenEvents:   se,
 		done:           make(chan bool),
 		state:          state.NewState(),
+		notifier:       notifier,
+		clientEvents:   clientEvents,
 	}
 }
 
@@ -71,13 +80,17 @@ func (c *Controller) do() {
 			case hat.Pressed:
 				changed = c.state.PaintPixel()
 			}
+
+		case e := <-c.clientEvents:
+			switch data := e.(type) {
+			case webapp.ClientEventRegistered:
+				id := uint64(data)
+				c.registered(id)
+			}
 		}
 
 		if changed {
-			msg := c.state.CreateDisplayMessage()
-			go func() {
-				c.screenEvents <- msg
-			}()
+			c.Update()
 		}
 	}
 }
@@ -87,4 +100,27 @@ func (c *Controller) stop(signals chan os.Signal) {
 	<-c.joystickEvents // wait for the hat graceful shutdown
 	signal.Stop(signals)
 	close(c.done)
+}
+
+func (c *Controller) Update() {
+	msg := c.state.CreateDisplayMessage()
+	go func() {
+		c.screenEvents <- msg
+	}()
+
+	js, err := json.Marshal(c.state)
+	if err != nil {
+		log.Println(err)
+	} else {
+		c.notifier.NotifyAll(js)
+	}
+}
+
+func (c *Controller) registered(id uint64) {
+	js, err := json.Marshal(c.state)
+	if err != nil {
+		log.Println(err)
+	} else {
+		c.notifier.NotifyOne(id, js)
+	}
 }
