@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RPiDraw</title>
+    <style>
+        html {
+            color: white;
+            background: black;
+        }
+        table, td, th {
+            border: 1px solid white;
+        }
+
+        td {
+            text-align:center;
+            vertical-align:middle
+        }
+
+        table {
+            border-collapse: collapse;
+            padding: 0;
+            margin: auto;
+        }
+
+        div#table_wrapper {
+            margin: auto;
+            padding: 0;
+        }
+
+        div#main {
+            margin: auto;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        td {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="main">
+    <h1>Pi Sense HAT Draw</h1>
+    <div id="table_wrapper">
+        <table id="matrix">
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    let cursorID
+
+    const socket = new WebSocket("ws://{{.Host}}:{{.Port}}/api/canvas/register");
+    socket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+        console.log(`Received new canvas: ${e.data}`)
+        let mt = document.getElementById("matrix")
+        while (mt.lastElementChild) {
+            mt.removeChild(mt.lastElementChild);
+        }
+
+        for ( let i = 0; i < data.canvas.length; i++ ) {
+            let line = data.canvas[i]
+            let tr = document.createElement("tr")
+            for (let j = 0; j < line.length; j++) {
+                let cell = line[j]
+                let td = document.createElement("td")
+                td.id = getCelId(j, i)
+                if ( cell ) {
+                    td.style.backgroundColor = "#ffffff"
+                }
+
+                tr.appendChild(td)
+            }
+            mt.appendChild(tr)
+        }
+
+        cursorID = getCelId(data.cursor.x, data.cursor.y)
+        const cursorElement = document.getElementById(cursorID)
+        cursorElement.style.color = reverseColor(cursorElement.style.backgroundColor)
+        cursorElement.innerText = 'x'
+    }
+
+    function getCelId(x, y) {
+        return `${x}`.padStart(2, '0') + '_' + `${y}`.padStart(2, '0')
+    }
+
+    function reverseColor(bg) {
+        const rx = /rgb\((\d+), (\d+), (\d+)\)/
+        let colors = bg.match(rx)
+        if (!colors) {
+            return 'rgb(255, 255, 255)'
+        }
+
+        const r = 255 - parseInt(colors[1])
+        const g = 255 - parseInt(colors[1])
+        const b = 255 - parseInt(colors[1])
+
+        return `rgb(${r}, ${g}, ${b}`
+    }
+</script>
+</body>
+</html>
