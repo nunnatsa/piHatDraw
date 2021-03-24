@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,16 +13,52 @@ import (
 	"github.com/nunnatsa/piHatDraw/controller"
 )
 
-func main() {
+var (
+	canvasWidth, canvasHeight uint8
+	port                      uint16
+)
 
+func init() {
+	var width, height, prt uint
+	flag.UintVar(&width, "width", 24, "Canvas width in pixels")
+	flag.UintVar(&height, "height", 24, "Canvas height in pixels")
+	flag.UintVar(&prt, "port", 8080, "The application port")
+
+	flag.Parse()
+
+	if width < 8 {
+		fmt.Println("The minimum width of the canvas is 8 pixels; setting it for you")
+		width = 8
+	}
+
+	if width > 40 {
+		log.Fatal("ERROR: The maximum width of the canvas is 40 pixels")
+	}
+	canvasWidth = uint8(width)
+
+	if height < 8 {
+		fmt.Println("The minimum height of the canvas is 8 pixels; setting it for you")
+		height = 8
+	}
+
+	if height > 40 {
+		log.Fatal("ERROR: The maximum height of the canvas is 40 pixels")
+	}
+	canvasHeight = uint8(height)
+
+	port = uint16(prt)
+}
+
+func main() {
 	n := notifier.NewNotifier()
 
 	clientEvents := make(chan webapp.ClientEvent)
-	webApplication := webapp.NewWebApplication(n, 8080, clientEvents)
+	webApplication := webapp.NewWebApplication(n, port, clientEvents)
 
-	server := http.Server{Addr: ":8080", Handler: webApplication.GetMux()}
+	portStr := fmt.Sprintf(":%d", port)
+	server := http.Server{Addr: portStr, Handler: webApplication.GetMux()}
 
-	control := controller.NewController(n, clientEvents)
+	control := controller.NewController(n, clientEvents, canvasWidth, canvasHeight)
 	done := control.Start()
 	go func() {
 		<-done

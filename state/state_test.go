@@ -2,15 +2,21 @@ package state
 
 import "testing"
 
-func TestNewState(t *testing.T) {
-	s := NewState()
+var (
+	canvasWidth  = uint8(40)
+	canvasHeight = uint8(24)
+)
 
-	if len(s.Canvas) != canvasHeight {
+func TestNewState(t *testing.T) {
+
+	s := NewState(canvasWidth, canvasHeight)
+
+	if len(s.Canvas) != int(canvasHeight) {
 		t.Errorf("len(s.Canvas should be %d but it's %d", canvasHeight, len(s.Canvas))
 	}
 
 	for i, line := range s.Canvas {
-		if len(line) != canvasWidth {
+		if len(line) != int(canvasWidth) {
 			t.Errorf("line %d length should be %d but it's %d", i, canvasWidth, len(line))
 		}
 	}
@@ -25,10 +31,13 @@ func TestNewState(t *testing.T) {
 }
 
 func TestCreateDisplayMessage(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	s.Cursor.X = 7
 	s.Cursor.Y = 3
+
+	s.Window.X = 0
+	s.Window.Y = 0
 
 	s.Canvas[4][3] = true
 
@@ -47,7 +56,7 @@ func TestCreateDisplayMessage(t *testing.T) {
 }
 
 func TestStateGoUp(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	x := s.Cursor.X
 	y := s.Cursor.Y
@@ -71,7 +80,7 @@ func TestStateGoUp(t *testing.T) {
 }
 
 func TestStateGoDown(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	x := s.Cursor.X
 	y := s.Cursor.Y
@@ -95,7 +104,7 @@ func TestStateGoDown(t *testing.T) {
 }
 
 func TestStateGoLeft(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	x := s.Cursor.X
 	y := s.Cursor.Y
@@ -119,7 +128,7 @@ func TestStateGoLeft(t *testing.T) {
 }
 
 func TestStateGoRight(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	x := s.Cursor.X
 	y := s.Cursor.Y
@@ -143,7 +152,7 @@ func TestStateGoRight(t *testing.T) {
 }
 
 func TestStatePaintPixel(t *testing.T) {
-	s := NewState()
+	s := NewState(canvasWidth, canvasHeight)
 
 	if s.Canvas[s.Cursor.Y][s.Cursor.X] {
 		t.Errorf("s.Canvas[%d][%d] should not be set, but it is", s.Cursor.Y, s.Cursor.X)
