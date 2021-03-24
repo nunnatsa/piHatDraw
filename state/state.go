@@ -8,11 +8,6 @@ import (
 	"github.com/nunnatsa/piHatDraw/common"
 )
 
-const (
-	canvasHeight = common.WindowSize
-	canvasWidth  = common.WindowSize
-)
-
 type canvas [][]common.Color
 
 type cursor struct {
@@ -20,26 +15,43 @@ type cursor struct {
 	Y uint8 `json:"y"`
 }
 
-type State struct {
-	Canvas canvas `json:"canvas,omitempty"`
-	Cursor cursor `json:"cursor,omitempty"`
+type window struct {
+	X uint8 `json:"x"`
+	Y uint8 `json:"y"`
 }
 
-func NewState() *State {
+type State struct {
+	Canvas       canvas `json:"canvas,omitempty"`
+	Cursor       cursor `json:"cursor,omitempty"`
+	Window       window `json:"window,omitempty"`
+	canvasWidth  uint8
+	canvasHeight uint8
+}
+
+func NewState(canvasWidth, canvasHeight uint8) *State {
 	c := make([][]common.Color, canvasHeight)
-	for y := 0; y < canvasHeight; y++ {
+	for y := uint8(0); y < canvasHeight; y++ {
 		c[y] = make([]common.Color, canvasWidth)
 	}
 
+	cr := cursor{X: canvasWidth / 2, Y: canvasHeight / 2}
+	halfWindow := uint8(common.WindowSize / 2)
+	win := window{X: cr.X - halfWindow, Y: cr.Y - halfWindow}
 	return &State{
-		Canvas: c,
-		Cursor: cursor{X: canvasWidth / 2, Y: canvasHeight / 2},
+		Canvas:       c,
+		Cursor:       cr,
+		Window:       win,
+		canvasWidth:  canvasWidth,
+		canvasHeight: canvasHeight,
 	}
 }
 
 func (s *State) GoUp() bool {
 	if s.Cursor.Y > 0 {
 		s.Cursor.Y--
+		if s.Cursor.Y < s.Window.Y {
+			s.Window.Y = s.Cursor.Y
+		}
 		return true
 	}
 	return false
@@ -48,14 +60,20 @@ func (s *State) GoUp() bool {
 func (s *State) GoLeft() bool {
 	if s.Cursor.X > 0 {
 		s.Cursor.X--
+		if s.Cursor.X < s.Window.X {
+			s.Window.X = s.Cursor.X
+		}
 		return true
 	}
 	return false
 }
 
 func (s *State) GoDown() bool {
-	if s.Cursor.Y < canvasHeight-1 {
+	if s.Cursor.Y < s.canvasHeight-1 {
 		s.Cursor.Y++
+		if s.Cursor.Y > s.Window.Y+common.WindowSize-1 {
+			s.Window.Y++
+		}
 		return true
 	}
 
@@ -63,8 +81,11 @@ func (s *State) GoDown() bool {
 }
 
 func (s *State) GoRight() bool {
-	if s.Cursor.X < canvasWidth-1 {
+	if s.Cursor.X < s.canvasWidth-1 {
 		s.Cursor.X++
+		if s.Cursor.X > s.Window.X+common.WindowSize-1 {
+			s.Window.X++
+		}
 		return true
 	}
 
@@ -72,7 +93,7 @@ func (s *State) GoRight() bool {
 }
 
 func (s *State) PaintPixel() bool {
-	if s.Cursor.Y >= canvasHeight || s.Cursor.X >= canvasWidth {
+	if s.Cursor.Y >= s.canvasHeight || s.Cursor.X >= s.canvasWidth {
 		log.Printf("Error: Cursor (%d, %d) is out of canvas\n", s.Cursor.X, s.Cursor.Y)
 		return false
 	}
@@ -86,10 +107,10 @@ func (s *State) PaintPixel() bool {
 
 func (s State) CreateDisplayMessage() hat.DisplayMessage {
 	c := make([][]common.Color, common.WindowSize)
-	for y := 0; y < common.WindowSize; y++ {
+	for y := uint8(0); y < common.WindowSize; y++ {
 		c[y] = make([]common.Color, 0, common.WindowSize)
-		c[y] = append(c[y], s.Canvas[y]...)
+		c[y] = append(c[y], s.Canvas[s.Window.Y+y][s.Window.X:s.Window.X+common.WindowSize]...)
 	}
 
-	return hat.NewDisplayMessage(c, s.Cursor.X, s.Cursor.Y)
+	return hat.NewDisplayMessage(c, s.Cursor.X-s.Window.X, s.Cursor.Y-s.Window.Y)
 }

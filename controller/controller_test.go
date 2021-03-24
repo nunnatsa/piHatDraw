@@ -13,7 +13,7 @@ import (
 )
 
 func TestControllerStart(t *testing.T) {
-	s := state.NewState()
+	s := state.NewState(40, 24)
 	je := make(chan hat.Event)
 	se := make(chan hat.DisplayMessage)
 	n := notifier.NewNotifier()
@@ -49,8 +49,8 @@ func TestControllerStart(t *testing.T) {
 	c.Start()
 
 	msg := <-se
-	if msg.CursorX != x {
-		t.Errorf("msg.CursorX should be %d but it's %d", x, msg.CursorX)
+	if msg.CursorX != x-s.Window.X {
+		t.Errorf("msg.CursorX should be %d but it's %d", x-s.Window.X, msg.CursorX)
 	}
 
 	ce <- webapp.ClientEventRegistered(client1)
@@ -58,45 +58,45 @@ func TestControllerStart(t *testing.T) {
 	ce <- webapp.ClientEventRegistered(client2)
 	<-checkNotifications(t, reg2, x, y)
 
-	if msg.CursorY != y {
-		t.Errorf("msg.CursorY should be %d but it's %d", y, msg.CursorY)
+	if msg.CursorY != y-s.Window.Y {
+		t.Errorf("msg.CursorY should be %d but it's %d", y-s.Window.Y, msg.CursorY)
 	}
 
 	hatMock.MoveDown()
 	msg = <-se
-	if msg.CursorY != y+1 {
-		t.Errorf("msg.CursorY should be %d but it's %d", y+1, msg.CursorY)
+	if msg.CursorY != y+1-s.Window.Y {
+		t.Errorf("msg.CursorY should be %d but it's %d", y+1-s.Window.Y, msg.CursorY)
 	}
 	<-checkNotifications(t, reg1, x, y+1)
 	<-checkNotifications(t, reg2, x, y+1)
 
 	hatMock.MoveUp()
 	msg = <-se
-	if msg.CursorY != y {
-		t.Errorf("msg.CursorY should be %d but it's %d", y, msg.CursorY)
+	if msg.CursorY != y-s.Window.Y {
+		t.Errorf("msg.CursorY should be %d but it's %d", y-s.Window.Y, msg.CursorY)
 	}
 	<-checkNotifications(t, reg1, x, y)
 	<-checkNotifications(t, reg2, x, y)
 
 	hatMock.MoveRight()
 	msg = <-se
-	if msg.CursorX != x+1 {
-		t.Errorf("msg.CursorX should be %d but it's %d", x+1, msg.CursorY)
+	if msg.CursorX != x+1-s.Window.X {
+		t.Errorf("msg.CursorX should be %d but it's %d", x+1-s.Window.X, msg.CursorY)
 	}
 	<-checkNotifications(t, reg1, x+1, y)
 	<-checkNotifications(t, reg2, x+1, y)
 
 	hatMock.MoveLeft()
 	msg = <-se
-	if msg.CursorY != x {
-		t.Errorf("msg.CursorX should be %d but it's %d", x, msg.CursorY)
+	if msg.CursorX != x-s.Window.X {
+		t.Errorf("msg.CursorX should be %d but it's %d", x-s.Window.X, msg.CursorX)
 	}
 	<-checkNotifications(t, reg1, x, y)
 	<-checkNotifications(t, reg2, x, y)
 
 	hatMock.Press()
 	msg = <-se
-	if !msg.Screen[y][x] {
+	if !msg.Screen[y-s.Window.Y][x-s.Window.X] {
 		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
 	}
 	<-checkNotifications(t, reg1, x, y, x, y)

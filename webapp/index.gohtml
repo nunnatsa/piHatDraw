@@ -60,8 +60,32 @@
     let cursorID
 
     const socket = new WebSocket("ws://{{.Host}}:{{.Port}}/api/canvas/register");
+
+    function markWindowBorders(i, j, td, win) {
+        if (i === win.y) {
+            if (j >= win.x && j <= win.x + 7) {
+                td.style.borderTopWidth = "3px"
+            }
+        } else if (i === win.y + 7) {
+            if (j >= win.x && j <= win.x + 7) {
+                td.style.borderBottomWidth = "3px"
+            }
+        }
+
+        if (j === win.x) {
+            if (i >= win.y && i <= win.y + 7) {
+                td.style.borderLeftWidth = "3px"
+            }
+        } else if (j === win.x + 7) {
+            if (i >= win.y && i <= win.y + 7) {
+                td.style.borderRightWidth = "3px"
+            }
+        }
+    }
+
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data)
+
         console.log(`Received new canvas: ${e.data}`)
         let mt = document.getElementById("matrix")
         while (mt.lastElementChild) {
@@ -78,6 +102,8 @@
                 if ( cell ) {
                     td.style.backgroundColor = "#ffffff"
                 }
+
+                markWindowBorders(i, j, td, data.window);
 
                 tr.appendChild(td)
             }

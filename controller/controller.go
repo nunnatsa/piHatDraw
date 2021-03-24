@@ -24,7 +24,7 @@ type Controller struct {
 	clientEvents   <-chan webapp.ClientEvent
 }
 
-func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.ClientEvent) *Controller {
+func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.ClientEvent, canvasWidth uint8, canvasHeight uint8) *Controller {
 	je := make(chan hat.Event)
 	se := make(chan hat.DisplayMessage)
 
@@ -33,7 +33,7 @@ func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.Clien
 		joystickEvents: je,
 		screenEvents:   se,
 		done:           make(chan bool),
-		state:          state.NewState(),
+		state:          state.NewState(canvasWidth, canvasHeight),
 		notifier:       notifier,
 		clientEvents:   clientEvents,
 	}
