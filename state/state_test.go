@@ -1,6 +1,10 @@
 package state
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/nunnatsa/piHatDraw/common"
+)
 
 var (
 	canvasWidth  = uint8(40)
@@ -39,10 +43,10 @@ func TestCreateDisplayMessage(t *testing.T) {
 	s.Window.X = 0
 	s.Window.Y = 0
 
-	s.Canvas[4][3] = true
+	s.Canvas[4][3] = common.Color(0xAABBCC)
 
 	msg := s.CreateDisplayMessage()
-	if !msg.Screen[4][3] {
+	if msg.Screen[4][3] != common.Color(0xAABBCC) {
 		t.Error("msg.Screen[4][3] should be set")
 	}
 
@@ -154,7 +158,7 @@ func TestStateGoRight(t *testing.T) {
 func TestStatePaintPixel(t *testing.T) {
 	s := NewState(canvasWidth, canvasHeight)
 
-	if s.Canvas[s.Cursor.Y][s.Cursor.X] {
+	if s.Canvas[s.Cursor.Y][s.Cursor.X] != 0 {
 		t.Errorf("s.Canvas[%d][%d] should not be set, but it is", s.Cursor.Y, s.Cursor.X)
 	}
 
@@ -162,7 +166,7 @@ func TestStatePaintPixel(t *testing.T) {
 	if !res {
 		t.Error("should return true")
 	}
-	if !s.Canvas[s.Cursor.Y][s.Cursor.X] {
+	if s.Canvas[s.Cursor.Y][s.Cursor.X] != 0xFFFFFF {
 		t.Errorf("s.Canvas[%d][%d] should be set, but it's not", s.Cursor.Y, s.Cursor.X)
 	}
 
@@ -170,7 +174,7 @@ func TestStatePaintPixel(t *testing.T) {
 	if res {
 		t.Error("should return false")
 	}
-	if !s.Canvas[s.Cursor.Y][s.Cursor.X] {
+	if s.Canvas[s.Cursor.Y][s.Cursor.X] != 0xFFFFFF {
 		t.Errorf("s.Canvas[%d][%d] should be set, but it's not", s.Cursor.Y, s.Cursor.X)
 	}
 
@@ -186,5 +190,48 @@ func TestStatePaintPixel(t *testing.T) {
 	res = s.PaintPixel()
 	if res {
 		t.Error("should return false")
+	}
+}
+
+func TestState_getColor(t *testing.T) {
+	cr := cursor{
+		X: 4,
+		Y: 5,
+	}
+
+	s := State{
+		Cursor: cr,
+		Pen:    &pen{Color: 0x12345},
+	}
+	s.SetPen()
+
+	if c := s.tool.GetColor(); c != 0x12345 {
+		t.Errorf("color should be 0x12345 but it's 0x%x", c)
+	}
+
+	s.Pen.Color = 0x12346
+
+	if c := s.tool.GetColor(); c != 0x12346 {
+		t.Errorf("color should be 0x12346 but it's 0x%x", c)
+	}
+
+	s.SetEraser()
+
+	if c := s.Pen.GetColor(); c != 0x12346 {
+		t.Errorf("color should be 0x12346 but it's 0x%x", c)
+	}
+
+	if c := s.tool.GetColor(); c != 0 {
+		t.Errorf("color should be 0 but it's 0x%x", c)
+	}
+
+	s.SetPen()
+
+	if c := s.Pen.GetColor(); c != 0x12346 {
+		t.Errorf("color should be 0x12346 but it's 0x%x", c)
+	}
+
+	if c := s.tool.GetColor(); c != 0x12346 {
+		t.Errorf("color should be 0x12346 but it's 0x%x", c)
 	}
 }

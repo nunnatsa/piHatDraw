@@ -19,9 +19,21 @@ type Interface interface {
 // green and the 5 LB bits are blue
 // rrrrrggggggbbbbb
 const (
-	redColor   color.Color = 0b1111100000000000
-	whiteColor color.Color = 0b1111111111111111
+	redColor color.Color  = 0b1111100000000000
+	rmask    common.Color = 0b111110000000000000000000
+	gmask    common.Color = 0b000000001111110000000000
+	bmask    common.Color = 0b000000000000000011111000
 )
+
+// to convert 24-bit color to 16-bit color, we are taking only the 5 (for red and
+// blue) or 6 (for green) MS bits
+func toHatColor(c common.Color) color.Color {
+	r := color.Color((c & rmask) >> 8)
+	g := color.Color((c & gmask) >> 5)
+	b := color.Color((c & bmask) >> 3)
+
+	return r | g | b
+}
 
 const defaultJoystickFile = "/dev/input/event0"
 
@@ -128,9 +140,7 @@ func (h *Hat) drawScreen(screenChange DisplayMessage) {
 	fb := screen.NewFrameBuffer()
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
-			if screenChange.Screen[y][x] {
-				fb.SetPixel(x, y, whiteColor)
-			}
+			fb.SetPixel(x, y, toHatColor(screenChange.Screen[y][x]))
 		}
 	}
 	fb.SetPixel(int(screenChange.CursorX), int(screenChange.CursorY), redColor)

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/nunnatsa/piHatDraw/common"
 	"testing"
 
 	"github.com/nunnatsa/piHatDraw/notifier"
@@ -96,11 +97,31 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.Press()
 	msg = <-se
-	if !msg.Screen[y-s.Window.Y][x-s.Window.X] {
+	if msg.Screen[y-s.Window.Y][x-s.Window.X] != 0xFFFFFF {
 		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
 	}
 	<-checkNotifications(t, reg1, x, y, x, y)
 	<-checkNotifications(t, reg2, x, y, x, y)
+
+	ce <- webapp.ClientEventSetColor(0x123456)
+	<-checkNotificationsColor(t, reg1, 0x123456, "pen")
+	<-checkNotificationsColor(t, reg2, 0x123456, "pen")
+
+	ce <- webapp.ClientEventSetTool("eraser")
+	<-checkNotificationsColor(t, reg1, 0x123456, "eraser")
+	<-checkNotificationsColor(t, reg2, 0x123456, "eraser")
+
+	ce <- webapp.ClientEventSetColor(0x654321)
+	<-checkNotificationsColor(t, reg1, 0x654321, "eraser")
+	<-checkNotificationsColor(t, reg2, 0x654321, "eraser")
+
+	ce <- webapp.ClientEventSetTool("pen")
+	<-checkNotificationsColor(t, reg1, 0x654321, "pen")
+	<-checkNotificationsColor(t, reg2, 0x654321, "pen")
+	ce <- webapp.ClientEventReset(true)
+	<-checkNotificationsColor(t, reg1, 0xFFFFFF, "pen")
+	<-checkNotifications(t, reg2, x, y)
+
 }
 
 func checkNotifications(t *testing.T, reg chan []byte, x uint8, y uint8, points ...uint8) chan bool {
@@ -125,10 +146,30 @@ func checkNotifications(t *testing.T, reg chan []byte, x uint8, y uint8, points 
 				px := points[i]
 				py := points[i+1]
 
-				if !webMsg.Canvas[py][px] {
+				if webMsg.Canvas[py][px] != 0xFFFFFF {
 					t.Error("webMsg.Canvas[py][px] should be set")
 				}
 			}
+		}
+	}()
+	return doneCheckingNotifier
+}
+
+func checkNotificationsColor(t *testing.T, reg chan []byte, color common.Color, tool string) chan bool {
+	doneCheckingNotifier := make(chan bool)
+	go func() {
+		defer close(doneCheckingNotifier)
+
+		msg := <-reg
+		webMsg, err := getCanvasFromMsg(msg)
+		if err != nil {
+			t.Fatal("getCanvasFromMsg", err)
+		}
+		if webMsg.Pen.Color != color {
+			t.Errorf("webMsg.Cursor.Pen.Color should be %x but it's %x", color, webMsg.Pen.Color)
+		}
+		if webMsg.ToolName != tool {
+			t.Errorf("webMsg.Cursor.ToolName should be %x but it's %x", tool, webMsg.ToolName)
 		}
 	}()
 	return doneCheckingNotifier

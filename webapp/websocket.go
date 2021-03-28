@@ -1,11 +1,14 @@
 package webapp
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 
+	"github.com/nunnatsa/piHatDraw/common"
 	"github.com/nunnatsa/piHatDraw/notifier"
 )
 
@@ -19,6 +22,12 @@ var (
 type ClientEvent interface{}
 
 type ClientEventRegistered uint64
+
+type ClientEventSetColor common.Color
+
+type ClientEventSetTool string
+
+type ClientEventReset bool
 
 type WebApplication struct {
 	mux          *http.ServeMux
@@ -35,6 +44,9 @@ func NewWebApplication(mailbox *notifier.Notifier, port uint16, ch chan<- Client
 	ca := &WebApplication{mux: mux, notifier: mailbox, clientEvents: ch}
 	mux.Handle("/", newIndexPage(port))
 	mux.HandleFunc("/api/canvas/register", ca.register)
+	mux.HandleFunc("/api/canvas/color", ca.setColor)
+	mux.HandleFunc("/api/canvas/tool", ca.setTool)
+	mux.HandleFunc("/api/canvas/reset", ca.reset)
 
 	return ca
 }
@@ -66,6 +78,80 @@ func (ca WebApplication) register(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		log.Println("Connection is closed")
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+type setColorRq struct {
+	Color common.Color `json:"color"`
+}
+
+func (ca WebApplication) setColor(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		enc := json.NewDecoder(r.Body)
+		msg := &setColorRq{}
+		err := enc.Decode(msg)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error": "can't parse json'"}`)
+			return
+		}
+
+		log.Printf("Got set color request. Color = #%06x", msg.Color)
+
+		clientEvent := ClientEventSetColor(msg.Color)
+		ca.clientEvents <- clientEvent
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+type setToolRq struct {
+	ToolName string `json:"toolName"`
+}
+
+func (ca WebApplication) setTool(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		enc := json.NewDecoder(r.Body)
+		msg := &setToolRq{}
+		err := enc.Decode(msg)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error": "can't parse json'"}`)
+			return
+		}
+
+		log.Printf("Got set tool request. tool name = %v", msg.ToolName)
+
+		clientEvent := ClientEventSetTool(msg.ToolName)
+		ca.clientEvents <- clientEvent
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+type resetRq struct {
+	Reset bool `json:"reset"`
+}
+
+func (ca WebApplication) reset(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		enc := json.NewDecoder(r.Body)
+		msg := &resetRq{}
+		err := enc.Decode(msg)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error": "can't parse json'"}`)
+			return
+		}
+
+		if msg.Reset {
+			log.Printf("Got reset request")
+		}
+
+		clientEvent := ClientEventReset(true)
+		ca.clientEvents <- clientEvent
 	} else {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
