@@ -34,6 +34,15 @@
             padding-right: 0;
         }
 
+        div#control {
+            margin-top: 1em;
+            border: 1px solid white;
+            padding: 1em;
+            width: fit-content;
+            float: left;
+            margin-right: 1em;
+        }
+
         h1 {
             text-align: center;
             margin-bottom: 2em;
@@ -49,12 +58,30 @@
 
 <div id="main">
     <h1>Pi Sense HAT Draw</h1>
+    <div id="control">
+        <p>
+            <label for="colorPicker">Change Color</label> <input type="color" id="colorPicker" value="#ffffff"/>
+        </p>
+        <p>Tool:
+            <input type="radio" id="toolTypePen" name="toolType" value=true checked />
+            <label for="toolTypePen">Pen</label>
+            <input type="radio" id="toolTypeEraser" name="toolType" value=false />
+            <label for="toolTypeEraser">Eraser</label>
+        </p>
+        <p>
+            <input id="pickColorFromPixel" type="button" value="Get current pixel color">
+        </p>
+        <p>
+            <input id="reset" type="button" value="Reset">
+        </p>
+    </div>
     <div id="table_wrapper">
         <table id="matrix">
         </table>
     </div>
 </div>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript">
 
     let cursorID
@@ -99,9 +126,7 @@
                 let cell = line[j]
                 let td = document.createElement("td")
                 td.id = getCelId(j, i)
-                if ( cell ) {
-                    td.style.backgroundColor = "#ffffff"
-                }
+                td.style.backgroundColor = cell
 
                 markWindowBorders(i, j, td, data.window);
 
@@ -113,7 +138,72 @@
         cursorID = getCelId(data.cursor.x, data.cursor.y)
         const cursorElement = document.getElementById(cursorID)
         cursorElement.style.color = reverseColor(cursorElement.style.backgroundColor)
-        cursorElement.innerText = 'x'
+        const tool = data.tool
+        cursorElement.innerText = tool === "pen" ? '+' : tool === "eraser" ? 'x' : "?"
+
+        if ( data.tool === "pen" ) {
+            toolTypePen.checked = "checked"
+        } else if ( data.tool === "eraser" ) {
+            toolTypeEraser.checked = "checked"
+        }
+
+        colorPicker.value = data.pen.color
+    }
+
+    const colorPicker = document.getElementById("colorPicker")
+    colorPicker.onchange = function(e) {
+        $.post(
+            "http://{{.Host}}:{{.Port}}/api/canvas/color",
+            data=JSON.stringify({'color': colorPicker.value}),
+            dataType="json"
+        )
+    }
+
+    const toolTypePen = document.getElementById("toolTypePen")
+    toolTypePen.onchange = function (e) {
+        setTool("pen")
+    }
+    const toolTypeEraser = document.getElementById("toolTypeEraser")
+    toolTypeEraser.onchange = function (e) {
+        setTool("eraser")
+    }
+
+    pickColorFromPixel = document.getElementById("pickColorFromPixel")
+    pickColorFromPixel.onclick = function (e) {
+        const cell = document.getElementById(cursorID)
+        const colors = cell.style.backgroundColor.match(/rgb\((\d+), (\d+), (\d+)\)/)
+        if (colors && colors.length === 4) {
+            const red = parseInt(colors[1]) << 16
+            const green = parseInt(colors[2]) << 8
+            const blue = parseInt(colors[3])
+            const color = red | green | blue
+            const reqData = `{"color": "#${color.toString(16).padStart(6, '0')}"}`
+
+            $.post(
+                "http://{{.Host}}:{{.Port}}/api/canvas/color",
+                data = reqData,
+                dataType = "json"
+            )
+        }
+    }
+
+    const resetBtn = document.getElementById("reset")
+    resetBtn.onclick = function (e) {
+        if ( confirm("Are you sure you want to reset? it will delete the whole picture. You can't undo this!") ) {
+            $.post(
+                "http://{{.Host}}:{{.Port}}/api/canvas/reset",
+                data = `{"reset": true}`,
+                dataType = "json"
+            )
+        }
+    }
+
+    function setTool(toolName) {
+        $.post(
+            "http://{{.Host}}:{{.Port}}/api/canvas/tool",
+            data=JSON.stringify({'toolName': toolName}),
+            dataType="json"
+        )
     }
 
     function getCelId(x, y) {

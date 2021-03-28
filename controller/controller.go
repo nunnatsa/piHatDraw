@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/nunnatsa/piHatDraw/common"
+
 	"github.com/nunnatsa/piHatDraw/notifier"
 	"github.com/nunnatsa/piHatDraw/webapp"
 
@@ -86,6 +88,26 @@ func (c *Controller) do() {
 			case webapp.ClientEventRegistered:
 				id := uint64(data)
 				c.registered(id)
+
+			case webapp.ClientEventReset:
+				if data {
+					c.state.Reset()
+					changed = true
+				}
+
+			case webapp.ClientEventSetColor:
+				color := common.Color(data)
+				changed = c.state.SetColor(color)
+
+			case webapp.ClientEventSetTool:
+				switch string(data) {
+				case "pen":
+					changed = c.state.SetPen()
+				case "eraser":
+					changed = c.state.SetEraser()
+				default:
+					log.Printf(`unknown tool "%s"`, data)
+				}
 			}
 		}
 

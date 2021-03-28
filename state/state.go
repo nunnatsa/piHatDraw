@@ -20,30 +20,65 @@ type window struct {
 	Y uint8 `json:"y"`
 }
 
+type tool interface {
+	GetColor() common.Color
+}
+
+type pen struct {
+	Color common.Color `json:"color"`
+}
+
+func (p pen) GetColor() common.Color {
+	return p.Color
+}
+
+func (p *pen) SetColor(c common.Color) {
+	p.Color = c
+}
+
+type Eraser struct{}
+
+func (Eraser) GetColor() common.Color {
+	return 0
+}
+
 type State struct {
 	Canvas       canvas `json:"canvas,omitempty"`
 	Cursor       cursor `json:"cursor,omitempty"`
 	Window       window `json:"window,omitempty"`
 	canvasWidth  uint8
 	canvasHeight uint8
+	ToolName     string `json:"tool"`
+	Pen          *pen   `json:"pen"`
+	tool         tool
 }
 
 func NewState(canvasWidth, canvasHeight uint8) *State {
-	c := make([][]common.Color, canvasHeight)
-	for y := uint8(0); y < canvasHeight; y++ {
-		c[y] = make([]common.Color, canvasWidth)
-	}
-
-	cr := cursor{X: canvasWidth / 2, Y: canvasHeight / 2}
-	halfWindow := uint8(common.WindowSize / 2)
-	win := window{X: cr.X - halfWindow, Y: cr.Y - halfWindow}
-	return &State{
-		Canvas:       c,
-		Cursor:       cr,
-		Window:       win,
+	s := &State{
 		canvasWidth:  canvasWidth,
 		canvasHeight: canvasHeight,
 	}
+
+	s.Reset()
+
+	return s
+}
+
+func (s *State) Reset() {
+	c := make([][]common.Color, s.canvasHeight)
+	for y := uint8(0); y < s.canvasHeight; y++ {
+		c[y] = make([]common.Color, s.canvasWidth)
+	}
+
+	cr := cursor{X: s.canvasWidth / 2, Y: s.canvasHeight / 2}
+	halfWindow := uint8(common.WindowSize / 2)
+	win := window{X: cr.X - halfWindow, Y: cr.Y - halfWindow}
+
+	s.Canvas = c
+	s.Cursor = cr
+	s.Window = win
+	s.Pen = &pen{Color: 0xFFFFFF}
+	s.SetPen()
 }
 
 func (s *State) GoUp() bool {
@@ -97,8 +132,10 @@ func (s *State) PaintPixel() bool {
 		log.Printf("Error: Cursor (%d, %d) is out of canvas\n", s.Cursor.X, s.Cursor.Y)
 		return false
 	}
-	if !s.Canvas[s.Cursor.Y][s.Cursor.X] {
-		s.Canvas[s.Cursor.Y][s.Cursor.X] = true
+
+	c := s.tool.GetColor()
+	if s.Canvas[s.Cursor.Y][s.Cursor.X] != c {
+		s.Canvas[s.Cursor.Y][s.Cursor.X] = c
 		return true
 	}
 
@@ -113,4 +150,32 @@ func (s State) CreateDisplayMessage() hat.DisplayMessage {
 	}
 
 	return hat.NewDisplayMessage(c, s.Cursor.X-s.Window.X, s.Cursor.Y-s.Window.Y)
+}
+
+func (s *State) SetColor(cl common.Color) bool {
+	if s.Pen.GetColor() != cl {
+		s.Pen.SetColor(cl)
+		return true
+	}
+	return false
+}
+
+func (s *State) SetPen() bool {
+	s.tool = s.Pen
+	if s.ToolName != "pen" {
+		s.ToolName = "pen"
+		return true
+	}
+	return false
+}
+
+var eraser Eraser
+
+func (s *State) SetEraser() bool {
+	if s.ToolName != "eraser" {
+		s.ToolName = "eraser"
+		s.tool = eraser
+		return true
+	}
+	return false
 }
