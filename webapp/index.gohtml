@@ -8,6 +8,7 @@
             color: white;
             background: black;
         }
+
         table, td, th {
             border: 1px solid white;
         }
@@ -52,6 +53,7 @@
             width: 20px;
             height: 20px;
         }
+
     </style>
 </head>
 <body>
@@ -71,6 +73,17 @@
         <p>
             <input id="pickColorFromPixel" type="button" value="Get current pixel color">
         </p>
+        <form method="get" action="http://{{.Host}}:{{.Port}}/api/canvas/download">
+            <p>
+                <label id="pixelSizeRangeLabel" for="pixelSizeRange"></label>
+            </p>
+            <p>
+                <input type="range" name="pixelSize" min="1" max="20" value="3" step="1" id="pixelSizeRange">
+            </p>
+            <p>
+                <input id="download" type="submit" value="Download as Picture">
+            </p>
+        </form>
         <p>
             <input id="reset" type="button" value="Reset">
         </p>
@@ -198,6 +211,11 @@
         }
     }
 
+    const pixelSizeRangeLabel = document.getElementById("pixelSizeRangeLabel")
+    const pixelSizeRange = document.getElementById("pixelSizeRange")
+    window.onload = updateRangeLabel
+    pixelSizeRange.oninput = updateRangeLabel
+
     function setTool(toolName) {
         $.post(
             "http://{{.Host}}:{{.Port}}/api/canvas/tool",
@@ -222,6 +240,12 @@
         const b = 255 - parseInt(colors[1])
 
         return `rgb(${r}, ${g}, ${b}`
+    }
+
+    function updateRangeLabel() {
+        pixelSizeRange.style.width = document.getElementById("main").style.width
+        const plural = pixelSizeRange.value === "1" ? "" : "s"
+        pixelSizeRangeLabel.innerText = `Download Image Square Size: ${pixelSizeRange.value} pixel${plural}`
     }
 </script>
 </body>

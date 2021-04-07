@@ -10,6 +10,20 @@ import (
 
 type canvas [][]common.Color
 
+func (c canvas) Clone() canvas {
+	if len(c) == 0 || len(c[0]) == 0 {
+		return nil
+	}
+
+	newCanvas := make([][]common.Color, len(c))
+	for y, line := range c {
+		newCanvas[y] = make([]common.Color, len(line))
+		copy(newCanvas[y], line)
+	}
+
+	return newCanvas
+}
+
 type cursor struct {
 	X uint8 `json:"x"`
 	Y uint8 `json:"y"`
