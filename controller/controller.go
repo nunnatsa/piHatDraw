@@ -108,6 +108,10 @@ func (c *Controller) do() {
 				default:
 					log.Printf(`unknown tool "%s"`, data)
 				}
+
+			case webapp.ClientEventDownload:
+				ch := chan [][]common.Color(data)
+				ch <- c.state.Canvas.Clone()
 			}
 		}
 
