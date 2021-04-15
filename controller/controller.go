@@ -8,12 +8,10 @@ import (
 	"syscall"
 
 	"github.com/nunnatsa/piHatDraw/common"
-
-	"github.com/nunnatsa/piHatDraw/notifier"
-	"github.com/nunnatsa/piHatDraw/webapp"
-
 	"github.com/nunnatsa/piHatDraw/hat"
+	"github.com/nunnatsa/piHatDraw/notifier"
 	"github.com/nunnatsa/piHatDraw/state"
+	"github.com/nunnatsa/piHatDraw/webapp"
 )
 
 type Controller struct {
@@ -59,7 +57,7 @@ func (c *Controller) do() {
 	c.screenEvents <- msg
 
 	for {
-		changed := false
+		var change *state.Change = nil
 
 		select {
 		case <-signals:
@@ -68,19 +66,19 @@ func (c *Controller) do() {
 		case je := <-c.joystickEvents:
 			switch je {
 			case hat.MoveUp:
-				changed = c.state.GoUp()
+				change = c.state.GoUp()
 
 			case hat.MoveLeft:
-				changed = c.state.GoLeft()
+				change = c.state.GoLeft()
 
 			case hat.MoveDown:
-				changed = c.state.GoDown()
+				change = c.state.GoDown()
 
 			case hat.MoveRight:
-				changed = c.state.GoRight()
+				change = c.state.GoRight()
 
 			case hat.Pressed:
-				changed = c.state.PaintPixel()
+				change = c.state.PaintPixel()
 			}
 
 		case e := <-c.clientEvents:
@@ -91,20 +89,19 @@ func (c *Controller) do() {
 
 			case webapp.ClientEventReset:
 				if data {
-					c.state.Reset()
-					changed = true
+					change = c.state.Reset()
 				}
 
 			case webapp.ClientEventSetColor:
 				color := common.Color(data)
-				changed = c.state.SetColor(color)
+				change = c.state.SetColor(color)
 
 			case webapp.ClientEventSetTool:
 				switch string(data) {
 				case "pen":
-					changed = c.state.SetPen()
+					change = c.state.SetPen()
 				case "eraser":
-					changed = c.state.SetEraser()
+					change = c.state.SetEraser()
 				default:
 					log.Printf(`unknown tool "%s"`, data)
 				}
@@ -112,11 +109,14 @@ func (c *Controller) do() {
 			case webapp.ClientEventDownload:
 				ch := chan [][]common.Color(data)
 				ch <- c.state.Canvas.Clone()
+
+			case webapp.ClientEventUndo:
+				change = c.state.Undo()
 			}
 		}
 
-		if changed {
-			c.Update()
+		if change != nil {
+			c.Update(change)
 		}
 	}
 }
@@ -128,13 +128,13 @@ func (c *Controller) stop(signals chan os.Signal) {
 	close(c.done)
 }
 
-func (c *Controller) Update() {
+func (c *Controller) Update(change *state.Change) {
 	msg := c.state.CreateDisplayMessage()
 	go func() {
 		c.screenEvents <- msg
 	}()
 
-	js, err := json.Marshal(c.state)
+	js, err := json.Marshal(change)
 	if err != nil {
 		log.Println(err)
 	} else {
@@ -143,7 +143,8 @@ func (c *Controller) Update() {
 }
 
 func (c *Controller) registered(id uint64) {
-	js, err := json.Marshal(c.state)
+	change := c.state.GetFullChange()
+	js, err := json.Marshal(change)
 	if err != nil {
 		log.Println(err)
 	} else {

@@ -65,18 +65,32 @@ func TestStateGoUp(t *testing.T) {
 	x := s.Cursor.X
 	y := s.Cursor.Y
 
-	s.GoUp()
+	change := s.GoUp()
 	if s.Cursor.Y != y-1 {
 		t.Errorf("s.Cursor.Y should be %d but it's %d", y-1, s.Cursor.Y)
 	}
 	if s.Cursor.X != x {
 		t.Errorf("s.Cursor.X should be %d but it's %d", x, s.Cursor.X)
 	}
+	if change.Cursor.Y != y-1 {
+		t.Errorf("change.Cursor.Y should be %d but it's %d", y-1, change.Cursor.Y)
+	}
+
+	if change.Cursor.X != x {
+		t.Errorf("change.Cursor.X should be %d but it's %d", x, change.Cursor.X)
+	}
+
+	if l := undoList.len(); l > 0 {
+		t.Errorf("undo list should be empty, but it's with length of %d", l)
+	}
 
 	s.Cursor.Y = 0
-	s.GoUp()
+	change = s.GoUp()
+	if change != nil {
+		t.Errorf("change should be nil")
+	}
 	if s.Cursor.Y != 0 {
-		t.Errorf("s.Cursor.Y should be 0 but it's %d", s.Cursor.Y)
+		t.Errorf("s.Cursor.Y should be %d but it's %d", 0, s.Cursor.Y)
 	}
 	if s.Cursor.X != x {
 		t.Errorf("s.Cursor.X should be %d but it's %d", x, s.Cursor.X)
@@ -89,16 +103,29 @@ func TestStateGoDown(t *testing.T) {
 	x := s.Cursor.X
 	y := s.Cursor.Y
 
-	s.GoDown()
+	change := s.GoDown()
 	if s.Cursor.Y != y+1 {
 		t.Errorf("s.Cursor.Y should be %d but it's %d", y+1, s.Cursor.Y)
 	}
 	if s.Cursor.X != x {
 		t.Errorf("s.Cursor.X should be %d but it's %d", x, s.Cursor.X)
 	}
+	if change.Cursor.Y != y+1 {
+		t.Errorf("change.Cursor.Y should be %d but it's %d", y+1, change.Cursor.Y)
+	}
+	if change.Cursor.X != x {
+		t.Errorf("change.Cursor.X should be %d but it's %d", x, change.Cursor.X)
+	}
+
+	if l := undoList.len(); l > 0 {
+		t.Errorf("undo list should be empty, but it's with length of %d", l)
+	}
 
 	s.Cursor.Y = canvasHeight - 1
-	s.GoDown()
+	change = s.GoDown()
+	if change != nil {
+		t.Errorf("change should be nil")
+	}
 	if s.Cursor.Y != canvasHeight-1 {
 		t.Errorf("s.Cursor.Y should be %d but it's %d", canvasHeight-1, s.Cursor.Y)
 	}
@@ -113,18 +140,32 @@ func TestStateGoLeft(t *testing.T) {
 	x := s.Cursor.X
 	y := s.Cursor.Y
 
-	s.GoLeft()
+	change := s.GoLeft()
 	if s.Cursor.X != x-1 {
-		t.Errorf("s.Cursor.Y should be %d but it's %d", x-1, s.Cursor.X)
+		t.Errorf("s.Cursor.X should be %d but it's %d", x-1, s.Cursor.X)
 	}
 	if s.Cursor.Y != y {
-		t.Errorf("s.Cursor.X should be %d but it's %d", y, s.Cursor.Y)
+		t.Errorf("s.Cursor.Y should be %d but it's %d", y, s.Cursor.Y)
+	}
+	if change.Cursor.X != x-1 {
+		t.Errorf("change.Cursor.X should be %d but it's %d", x-1, change.Cursor.X)
+	}
+
+	if change.Cursor.Y != y {
+		t.Errorf("change.Cursor.Y should be %d but it's %d", y, change.Cursor.Y)
+	}
+
+	if l := undoList.len(); l > 0 {
+		t.Errorf("undo list should be empty, but it's with length of %d", l)
 	}
 
 	s.Cursor.X = 0
-	s.GoLeft()
+	change = s.GoLeft()
+	if change != nil {
+		t.Errorf("change should be nil")
+	}
 	if s.Cursor.X != 0 {
-		t.Errorf("s.Cursor.X should be 0 but it's %d", s.Cursor.X)
+		t.Errorf("s.Cursor.X should be %d but it's %d", 0, s.Cursor.X)
 	}
 	if s.Cursor.Y != y {
 		t.Errorf("s.Cursor.Y should be %d but it's %d", y, s.Cursor.Y)
@@ -137,16 +178,30 @@ func TestStateGoRight(t *testing.T) {
 	x := s.Cursor.X
 	y := s.Cursor.Y
 
-	s.GoRight()
+	change := s.GoRight()
 	if s.Cursor.X != x+1 {
 		t.Errorf("s.Cursor.X should be %d but it's %d", x+1, s.Cursor.X)
 	}
 	if s.Cursor.Y != y {
 		t.Errorf("s.Cursor.Y should be %d but it's %d", y, s.Cursor.Y)
 	}
+	if change.Cursor.X != x+1 {
+		t.Errorf("change.Cursor.X should be %d but it's %d", x+1, change.Cursor.X)
+	}
+
+	if change.Cursor.Y != y {
+		t.Errorf("change.Cursor.Y should be %d but it's %d", y, change.Cursor.Y)
+	}
+
+	if l := undoList.len(); l > 0 {
+		t.Errorf("undo list should be empty, but it's with length of %d", l)
+	}
 
 	s.Cursor.X = canvasWidth - 1
-	s.GoRight()
+	change = s.GoRight()
+	if change != nil {
+		t.Errorf("change should be nil")
+	}
 	if s.Cursor.X != canvasWidth-1 {
 		t.Errorf("s.Cursor.X should be %d but it's %d", canvasWidth-1, s.Cursor.X)
 	}
@@ -163,16 +218,35 @@ func TestStatePaintPixel(t *testing.T) {
 	}
 
 	res := s.PaintPixel()
-	if !res {
-		t.Error("should return true")
+	if res == nil {
+		t.Fatal("should return a change")
 	}
 	if s.Canvas[s.Cursor.Y][s.Cursor.X] != 0xFFFFFF {
-		t.Errorf("s.Canvas[%d][%d] should be set, but it's not", s.Cursor.Y, s.Cursor.X)
+		t.Fatalf("s.Canvas[%d][%d] should be set, but it's not", s.Cursor.Y, s.Cursor.X)
+	}
+
+	if len(res.Pixels) != 1 {
+		t.Errorf("res.Pixels should be with len of 1, but it is %d.", len(res.Pixels))
+	}
+	pixel := res.Pixels[0]
+	if pixel.X != s.Cursor.X || pixel.Y != s.Cursor.Y || pixel.Color != s.Pen.Color {
+		t.Errorf("x should be %d, y should be %d and color should be #%06x; but pixel is %#v", s.Cursor.X, s.Cursor.Y, s.Pen.Color, pixel)
+	}
+	if l := undoList.len(); l != 1 {
+		t.Errorf("undo list should be with len of 1, but it's with length of %d", l)
+	}
+
+	change := undoList.pop()
+	if l := len(change.Pixels); l != 1 {
+		t.Fatalf("pixel list should be with len of 1, but it's with length of %d", l)
+	}
+	if change.Pixels[0].X != res.Pixels[0].X || change.Pixels[0].Y != res.Pixels[0].Y || change.Pixels[0].Color != 0 {
+		t.Errorf("x should be %d, y should be %d and color should be #%06x; but pixel is %#v", s.Cursor.X, s.Cursor.Y, s.Pen.Color, change)
 	}
 
 	res = s.PaintPixel()
-	if res {
-		t.Error("should return false")
+	if res != nil {
+		t.Fatal("should not return a change")
 	}
 	if s.Canvas[s.Cursor.Y][s.Cursor.X] != 0xFFFFFF {
 		t.Errorf("s.Canvas[%d][%d] should be set, but it's not", s.Cursor.Y, s.Cursor.X)
@@ -180,16 +254,19 @@ func TestStatePaintPixel(t *testing.T) {
 
 	s.Cursor.X = canvasWidth
 	res = s.PaintPixel()
-	if res {
-		t.Error("should return false")
+	if res != nil {
+		t.Fatal("should not return a change")
+	}
+	if undoList.len() != 0 {
+		t.Error("undo list should be empty")
 	}
 
 	s.Cursor.X = canvasWidth / 2
 
 	s.Cursor.Y = canvasHeight
 	res = s.PaintPixel()
-	if res {
-		t.Error("should return false")
+	if res != nil {
+		t.Fatal("should not return a change")
 	}
 }
 
@@ -234,4 +311,33 @@ func TestState_getColor(t *testing.T) {
 	if c := s.tool.GetColor(); c != 0x12346 {
 		t.Errorf("color should be 0x12346 but it's 0x%x", c)
 	}
+}
+
+func TestState_Undo(t *testing.T) {
+	s := NewState(canvasWidth, canvasHeight)
+	if s.Canvas[3][4] != 0 {
+		t.Error("s.Canvas[3][4] should be 0")
+	}
+	if s.Canvas[10][20] != 0 {
+		t.Error("s.Canvas[3][4] should be 0")
+	}
+
+	c := &Change{
+		Pixels: []Pixel{{
+			X: 4, Y: 3, Color: 0x112233,
+		}, {
+			X: 20, Y: 10, Color: 0x112233,
+		}},
+	}
+
+	undoList.push(c)
+
+	s.Undo()
+	if s.Canvas[3][4] != 0x112233 {
+		t.Error("s.Canvas[3][4] should be 0x112233")
+	}
+	if s.Canvas[10][20] != 0x112233 {
+		t.Error("s.Canvas[3][4] should be 0x112233")
+	}
+
 }
