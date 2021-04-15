@@ -14,8 +14,8 @@
         }
 
         td {
-            text-align:center;
-            vertical-align:middle
+            text-align: center;
+            vertical-align: middle
         }
 
         table {
@@ -65,9 +65,9 @@
             <label for="colorPicker">Change Color</label> <input type="color" id="colorPicker" value="#ffffff"/>
         </p>
         <p>Tool:
-            <input type="radio" id="toolTypePen" name="toolType" value=true checked />
+            <input type="radio" id="toolTypePen" name="toolType" value=true checked/>
             <label for="toolTypePen">Pen</label>
-            <input type="radio" id="toolTypeEraser" name="toolType" value=false />
+            <input type="radio" id="toolTypeEraser" name="toolType" value=false/>
             <label for="toolTypeEraser">Eraser</label>
         </p>
         <p>
@@ -85,6 +85,9 @@
             </p>
         </form>
         <p>
+            <input id="undo" type="button" value="Undo">
+        </p>
+        <p>
             <input id="reset" type="button" value="Reset">
         </p>
     </div>
@@ -98,10 +101,14 @@
 <script type="text/javascript">
 
     let cursorID
+    let canvas
+    let tool
+    let color
+    let win
 
     const socket = new WebSocket("ws://{{.Host}}:{{.Port}}/api/canvas/register");
 
-    function markWindowBorders(i, j, td, win) {
+    function markWindowBorders(i, j, td) {
         if (i === win.y) {
             if (j >= win.x && j <= win.x + 7) {
                 td.style.borderTopWidth = "3px"
@@ -126,14 +133,40 @@
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data)
 
-        console.log(`Received new canvas: ${e.data}`)
-        let mt = document.getElementById("matrix")
+        console.log(`Received new webSocket message: ${e.data}`)
+        if (data.canvas) {
+            canvas = data.canvas
+        }
+
+        if (data.pixels && canvas) {
+            for (let pixel of data.pixels) {
+                canvas[pixel.y][pixel.x] = pixel.color
+            }
+        }
+
+        if (data.window) {
+            win = data.window
+        }
+
+        if (data.pen) {
+            color = data.pen.color
+        }
+
+        const mt = document.getElementById("matrix")
         while (mt.lastElementChild) {
             mt.removeChild(mt.lastElementChild);
         }
 
-        for ( let i = 0; i < data.canvas.length; i++ ) {
-            let line = data.canvas[i]
+        if (data.cursor) {
+            cursorID = getCelId(data.cursor.x, data.cursor.y)
+        }
+
+        if (data.toolName) {
+            tool = data.toolName
+        }
+
+        for (let i = 0; i < canvas.length; i++) {
+            let line = canvas[i]
             let tr = document.createElement("tr")
             for (let j = 0; j < line.length; j++) {
                 let cell = line[j]
@@ -141,34 +174,32 @@
                 td.id = getCelId(j, i)
                 td.style.backgroundColor = cell
 
-                markWindowBorders(i, j, td, data.window);
+                markWindowBorders(i, j, td);
 
                 tr.appendChild(td)
             }
             mt.appendChild(tr)
         }
 
-        cursorID = getCelId(data.cursor.x, data.cursor.y)
         const cursorElement = document.getElementById(cursorID)
         cursorElement.style.color = reverseColor(cursorElement.style.backgroundColor)
-        const tool = data.tool
         cursorElement.innerText = tool === "pen" ? '+' : tool === "eraser" ? 'x' : "?"
 
-        if ( data.tool === "pen" ) {
+        if (tool === "pen") {
             toolTypePen.checked = "checked"
-        } else if ( data.tool === "eraser" ) {
+        } else if (tool === "eraser") {
             toolTypeEraser.checked = "checked"
         }
 
-        colorPicker.value = data.pen.color
+        colorPicker.value = color
     }
 
     const colorPicker = document.getElementById("colorPicker")
-    colorPicker.onchange = function(e) {
+    colorPicker.onchange = function (e) {
         $.post(
             "http://{{.Host}}:{{.Port}}/api/canvas/color",
-            data=JSON.stringify({'color': colorPicker.value}),
-            dataType="json"
+            data = JSON.stringify({'color': colorPicker.value}),
+            dataType = "json"
         )
     }
 
@@ -202,13 +233,22 @@
 
     const resetBtn = document.getElementById("reset")
     resetBtn.onclick = function (e) {
-        if ( confirm("Are you sure you want to reset? it will delete the whole picture. You can't undo this!") ) {
+        if (confirm("Are you sure you want to reset? it will delete the whole picture. You can't undo this!")) {
             $.post(
                 "http://{{.Host}}:{{.Port}}/api/canvas/reset",
                 data = `{"reset": true}`,
                 dataType = "json"
             )
         }
+    }
+
+    const undoButton = document.getElementById("undo")
+    undoButton.onclick = function (e) {
+        $.post(
+            "http://{{.Host}}:{{.Port}}/api/canvas/undo",
+            data = `{"undo": true}`,
+            dataType = "json"
+        )
     }
 
     const pixelSizeRangeLabel = document.getElementById("pixelSizeRangeLabel")
@@ -219,8 +259,8 @@
     function setTool(toolName) {
         $.post(
             "http://{{.Host}}:{{.Port}}/api/canvas/tool",
-            data=JSON.stringify({'toolName': toolName}),
-            dataType="json"
+            data = JSON.stringify({'toolName': toolName}),
+            dataType = "json"
         )
     }
 
