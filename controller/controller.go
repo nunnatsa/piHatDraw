@@ -78,7 +78,7 @@ func (c *Controller) do() {
 				change = c.state.GoRight()
 
 			case hat.Pressed:
-				change = c.state.PaintPixel()
+				change = c.state.Paint()
 			}
 
 		case e := <-c.clientEvents:
@@ -97,18 +97,16 @@ func (c *Controller) do() {
 				change = c.state.SetColor(color)
 
 			case webapp.ClientEventSetTool:
-				switch string(data) {
-				case "pen":
-					change = c.state.SetPen()
-				case "eraser":
-					change = c.state.SetEraser()
-				default:
-					log.Printf(`unknown tool "%s"`, data)
+				var err error
+				change, err = c.state.SetTool(string(data))
+				if err != nil {
+					log.Printf(err.Error())
+					change = nil
 				}
 
 			case webapp.ClientEventDownload:
 				ch := chan [][]common.Color(data)
-				ch <- c.state.Canvas.Clone()
+				ch <- c.state.GetCanvasClone()
 
 			case webapp.ClientEventUndo:
 				change = c.state.Undo()
