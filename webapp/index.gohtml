@@ -69,6 +69,8 @@
             <label for="toolTypePen">Pen</label>
             <input type="radio" id="toolTypeEraser" name="toolType" value=false/>
             <label for="toolTypeEraser">Eraser</label>
+            <input type="radio" id="toolTypeBucket" name="toolType" value=false/>
+            <label for="toolTypeBucket">Bucket</label>
         </p>
         <p>
             <input id="pickColorFromPixel" type="button" value="Get current pixel color">
@@ -148,8 +150,8 @@
             win = data.window
         }
 
-        if (data.pen) {
-            color = data.pen.color
+        if (data.color) {
+            color = data.color
         }
 
         const mt = document.getElementById("matrix")
@@ -183,12 +185,26 @@
 
         const cursorElement = document.getElementById(cursorID)
         cursorElement.style.color = reverseColor(cursorElement.style.backgroundColor)
-        cursorElement.innerText = tool === "pen" ? '+' : tool === "eraser" ? 'x' : "?"
+        switch (tool) {
+            case "pen":
+                cursorElement.innerText = '+'
+                break
+            case "eraser":
+                cursorElement.innerText = 'x'
+                break
+            case "bucket":
+                cursorElement.innerText = 'o'
+                break
+            default:
+                cursorElement.innerText = '?'
+        }
 
         if (tool === "pen") {
             toolTypePen.checked = "checked"
         } else if (tool === "eraser") {
             toolTypeEraser.checked = "checked"
+        } else if (tool === "bucket") {
+            toolTypeBucket.checked = "checked"
         }
 
         colorPicker.value = color
@@ -210,6 +226,10 @@
     const toolTypeEraser = document.getElementById("toolTypeEraser")
     toolTypeEraser.onchange = function (e) {
         setTool("eraser")
+    }
+    const toolTypeBucket = document.getElementById("toolTypeBucket")
+    toolTypeBucket.onchange = function (e) {
+        setTool("bucket")
     }
 
     pickColorFromPixel = document.getElementById("pickColorFromPixel")

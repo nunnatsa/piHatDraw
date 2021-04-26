@@ -1,6 +1,7 @@
 package state
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/nunnatsa/piHatDraw/common"
@@ -363,4 +364,114 @@ func TestState_Undo(t *testing.T) {
 		t.Error("s.Canvas[3][4] should be 0x112233")
 	}
 
+}
+
+func TestBucket(t *testing.T) {
+	s := NewState(8, 8)
+	s.canvas = [][]common.Color{
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 1, 1, 1, 1, 1, 0},
+		{0, 0, 1, 0, 0, 0, 1, 0},
+		{0, 0, 1, 0, 0, 0, 1, 0},
+		{0, 0, 1, 0, 0, 0, 1, 0},
+		{0, 0, 1, 1, 1, 1, 1, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+	}
+
+	s.cursor.Y = 4
+	s.cursor.X = 4
+	s.toolName = bucketName
+	s.color = 2
+	s.Paint()
+	expected := Canvas{
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 1, 1, 1, 1, 1, 0},
+		{0, 0, 1, 2, 2, 2, 1, 0},
+		{0, 0, 1, 2, 2, 2, 1, 0},
+		{0, 0, 1, 2, 2, 2, 1, 0},
+		{0, 0, 1, 1, 1, 1, 1, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
+
+	s.cursor.X = 2
+	s.cursor.Y = 2
+	s.color = 3
+	s.Paint()
+	expected = Canvas{
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 3, 3, 3, 3, 3, 0},
+		{0, 0, 3, 2, 2, 2, 3, 0},
+		{0, 0, 3, 2, 2, 2, 3, 0},
+		{0, 0, 3, 2, 2, 2, 3, 0},
+		{0, 0, 3, 3, 3, 3, 3, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
+
+	s.cursor.X = 0
+	s.cursor.Y = 0
+	s.color = 4
+	s.Paint()
+
+	expected = Canvas{
+		{4, 4, 4, 4, 4, 4, 4, 4},
+		{4, 4, 4, 4, 4, 4, 4, 4},
+		{4, 4, 3, 3, 3, 3, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 3, 3, 3, 3, 4},
+		{4, 4, 4, 4, 4, 4, 4, 4},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
+
+	s.cursor.X = 7
+	s.cursor.Y = 7
+	s.color = 5
+	s.Paint()
+
+	expected = Canvas{
+		{5, 5, 5, 5, 5, 5, 5, 5},
+		{5, 5, 5, 5, 5, 5, 5, 5},
+		{5, 5, 3, 3, 3, 3, 3, 5},
+		{5, 5, 3, 2, 2, 2, 3, 5},
+		{5, 5, 3, 2, 2, 2, 3, 5},
+		{5, 5, 3, 2, 2, 2, 3, 5},
+		{5, 5, 3, 3, 3, 3, 3, 5},
+		{5, 5, 5, 5, 5, 5, 5, 5},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
+
+	s.Undo()
+
+	expected = Canvas{
+		{4, 4, 4, 4, 4, 4, 4, 4},
+		{4, 4, 4, 4, 4, 4, 4, 4},
+		{4, 4, 3, 3, 3, 3, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 2, 2, 2, 3, 4},
+		{4, 4, 3, 3, 3, 3, 3, 4},
+		{4, 4, 4, 4, 4, 4, 4, 4},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
 }
