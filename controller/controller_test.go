@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/nunnatsa/piHatDraw/common"
@@ -19,7 +18,11 @@ const (
 )
 
 func TestControllerStart(t *testing.T) {
-	s := state.NewState(40, 24)
+	const (
+		canvasWidth  = 40
+		canvasHeight = 24
+	)
+	s := state.NewState(canvasWidth, canvasHeight)
 	je := make(chan hat.Event)
 	se := make(chan hat.DisplayMessage)
 	n := notifier.NewNotifier()
@@ -49,14 +52,14 @@ func TestControllerStart(t *testing.T) {
 		clientEvents:   ce,
 	}
 
-	y := s.Cursor.Y
-	x := s.Cursor.X
+	y := uint8(canvasHeight / 2)
+	x := uint8(canvasWidth / 2)
 
 	c.Start()
 
 	msg := <-se
-	if msg.CursorX != x-s.Window.X {
-		t.Errorf("msg.CursorX should be %d but it's %d", x-s.Window.X, msg.CursorX)
+	if msg.CursorX != 4 {
+		t.Errorf("msg.CursorX should be %d but it's %d", 4, msg.CursorX)
 	}
 
 	ce <- webapp.ClientEventRegistered(client1)
@@ -70,8 +73,8 @@ func TestControllerStart(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if msg.CursorY != y-s.Window.Y {
-		t.Errorf("msg.CursorY should be %d but it's %d", y-s.Window.Y, msg.CursorY)
+	if msg.CursorY != 4 {
+		t.Errorf("msg.CursorY should be %d but it's %d", 4, msg.CursorY)
 	}
 
 	ce <- webapp.ClientEventUndo(true)
@@ -81,8 +84,8 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.MoveDown()
 	msg = <-se
-	if msg.CursorY != y+1-s.Window.Y {
-		t.Errorf("msg.CursorY should be %d but it's %d", y+1-s.Window.Y, msg.CursorY)
+	if msg.CursorY != 5 {
+		t.Errorf("msg.CursorY should be %d but it's %d", 5, msg.CursorY)
 	}
 	err = <-checkMoveNotifications(reg1, x, y+1)
 	if err != nil {
@@ -100,8 +103,8 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.MoveUp()
 	msg = <-se
-	if msg.CursorY != y-s.Window.Y {
-		t.Errorf("msg.CursorY should be %d but it's %d", y-s.Window.Y, msg.CursorY)
+	if msg.CursorY != 4 {
+		t.Errorf("msg.CursorY should be %d but it's %d", 4, msg.CursorY)
 	}
 	err = <-checkMoveNotifications(reg1, x, y)
 	if err != nil {
@@ -119,8 +122,8 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.MoveRight()
 	msg = <-se
-	if msg.CursorX != x+1-s.Window.X {
-		t.Errorf("msg.CursorX should be %d but it's %d", x+1-s.Window.X, msg.CursorY)
+	if msg.CursorX != 5 {
+		t.Errorf("msg.CursorX should be %d but it's %d", 5, msg.CursorX)
 	}
 	err = <-checkMoveNotifications(reg1, x+1, y)
 	if err != nil {
@@ -139,8 +142,8 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.MoveLeft()
 	msg = <-se
-	if msg.CursorX != x-s.Window.X {
-		t.Errorf("msg.CursorX should be %d but it's %d", x-s.Window.X, msg.CursorX)
+	if msg.CursorX != 4 {
+		t.Errorf("msg.CursorX should be %d but it's %d", 4, msg.CursorX)
 	}
 	err = <-checkMoveNotifications(reg1, x, y)
 	if err != nil {
@@ -159,7 +162,7 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.Press()
 	msg = <-se
-	if msg.Screen[y-s.Window.Y][x-s.Window.X] != 0xFFFFFF {
+	if msg.Screen[4][4] != 0xFFFFFF {
 		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
 	}
 	<-checkPaintNotifications(t, reg1, state.Pixel{X: x, Y: y, Color: 0xFFFFFF})
@@ -189,12 +192,13 @@ func TestControllerStart(t *testing.T) {
 
 	hatMock.Press()
 	msg = <-se
-	if msg.Screen[y-s.Window.Y][x-s.Window.X] != 0xFFFFFF {
+	if msg.Screen[4][4] != 0xFFFFFF {
 		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
 	}
 	<-checkPaintNotifications(t, reg1, state.Pixel{X: x, Y: y, Color: 0x654321})
 	<-checkPaintNotifications(t, reg2, state.Pixel{X: x, Y: y, Color: 0x654321})
 
+	canvasBeforeReset := s.GetCanvasClone()
 	ce <- webapp.ClientEventReset(true)
 	initColor := common.Color(0xFFFFFF)
 	<-checkNotificationsColor(t, reg1, &initColor, penToolName)
@@ -204,13 +208,12 @@ func TestControllerStart(t *testing.T) {
 	}
 
 	ce <- webapp.ClientEventUndo(true)
-	ns := state.NewState(40, 24)
-	ns.Canvas[12][20] = 0x654321
-	err = <-checkResetNotifications(reg1, ns.Canvas)
+
+	err = <-checkResetNotifications(reg1, canvasBeforeReset)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = <-checkResetNotifications(reg2, ns.Canvas)
+	err = <-checkResetNotifications(reg2, canvasBeforeReset)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,10 +279,10 @@ func checkNotificationsColor(t *testing.T, reg chan []byte, color *common.Color,
 			t.Fatal("getChangeFromMsg", err)
 		}
 		if color != nil {
-			if webMsg.Pen == nil {
-				t.Fatalf("webMsg.Cursor.Pen.Color should be #%06x but pen is nil", *color)
-			} else if webMsg.Pen.Color != *color {
-				t.Fatalf("webMsg.Cursor.Pen.Color should be #%06x but it's %x", *color, webMsg.Pen.Color)
+			if webMsg.Color == nil {
+				t.Fatal("webMsg.Cursor.Color should not be nil")
+			} else if *webMsg.Color != *color {
+				t.Fatalf("webMsg.Cursor.Pen.Color should be #%06x but it's %06x", *color, *webMsg.Color)
 			}
 		}
 		if tool != webMsg.ToolName {
@@ -309,10 +312,13 @@ func checkResetNotifications(reg chan []byte, canvas [][]common.Color) chan erro
 			return
 		}
 
-		webMsgCanvas := [][]common.Color(*webMsg.Canvas)
-		if !reflect.DeepEqual(webMsgCanvas, canvas) {
-			doneCheckingNotifier <- fmt.Errorf("canvas should contain the point before the reset")
-			return
+		for y, line := range webMsg.Canvas {
+			for x, val := range line {
+				if val != canvas[y][x] {
+					doneCheckingNotifier <- fmt.Errorf("canvas (%d, %d) = #%06x; msg (%d, %d) = #%06x", x, y, val, x, y, canvas[y][x])
+					return
+				}
+			}
 		}
 	}()
 	return doneCheckingNotifier
