@@ -14,6 +14,12 @@ const (
 	bucketName = "bucket"
 )
 
+const (
+	wightColor      = common.Color(0xFFFFFF)
+	blackColor      = common.Color(0)
+	backgroundColor = blackColor
+)
+
 type Canvas [][]common.Color
 
 func (c Canvas) Clone() Canvas {
@@ -49,20 +55,14 @@ type State struct {
 	canvasWidth  uint8
 	canvasHeight uint8
 	toolName     string
+	tool         tool
 	color        common.Color
-	tools        map[string]tool
 }
 
 func NewState(canvasWidth, canvasHeight uint8) *State {
 	s := &State{
 		canvasWidth:  canvasWidth,
 		canvasHeight: canvasHeight,
-	}
-
-	s.tools = map[string]tool{
-		penName:    s.pen,
-		eraserName: s.eraser,
-		bucketName: s.bucket,
 	}
 
 	_ = s.Reset()
@@ -95,8 +95,8 @@ func (s *State) Reset() *Change {
 	s.canvas = c
 	s.cursor = cr
 	s.window = win
-	s.color = 0xFFFFFF
-	s.toolName = penName
+	s.color = wightColor
+	_, _ = s.SetTool(penName)
 
 	return s.GetFullChange()
 }
@@ -148,7 +148,7 @@ func (s *State) GoRight() *Change {
 }
 
 func (s *State) Paint() *Change {
-	return s.tools[s.toolName]()
+	return s.tool()
 }
 
 func (s *State) setSinglePixelTool(color common.Color) *Change {
@@ -174,7 +174,7 @@ func (s *State) pen() *Change {
 }
 
 func (s *State) eraser() *Change {
-	return s.setSinglePixelTool(0)
+	return s.setSinglePixelTool(backgroundColor)
 }
 
 func (s State) getNeighbors(center Pixel) []Pixel {
@@ -289,12 +289,19 @@ func (s *State) SetColor(cl common.Color) *Change {
 }
 
 func (s *State) SetTool(toolName string) (*Change, error) {
-	if _, found := s.tools[toolName]; !found {
-		return nil, fmt.Errorf(`unknown tool "%s"`, toolName)
-	}
-
 	if toolName == s.toolName {
 		return nil, nil
+	}
+
+	switch toolName {
+	case penName:
+		s.tool = s.pen
+	case eraserName:
+		s.tool = s.eraser
+	case bucketName:
+		s.tool = s.bucket
+	default:
+		return nil, fmt.Errorf(`unknown tool "%s"`, toolName)
 	}
 
 	s.toolName = toolName
