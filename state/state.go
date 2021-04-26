@@ -11,6 +11,7 @@ import (
 const (
 	penName    = "pen"
 	eraserName = "eraser"
+	bucketName = "bucket"
 )
 
 type Canvas [][]common.Color
@@ -61,6 +62,7 @@ func NewState(canvasWidth, canvasHeight uint8) *State {
 	s.tools = map[string]tool{
 		penName:    s.pen,
 		eraserName: s.eraser,
+		bucketName: s.bucket,
 	}
 
 	_ = s.Reset()
@@ -149,48 +151,121 @@ func (s *State) Paint() *Change {
 	return s.tools[s.toolName]()
 }
 
-func (s *State) pen() *Change {
-	px := s.paintPixel(s.color)
-	if px == nil {
+func (s *State) setSinglePixelTool(color common.Color) *Change {
+	after, before := s.paintPixel(color, s.cursor.X, s.cursor.Y)
+	if after == nil {
 		return nil
 	}
 
-	return &Change{
-		Pixels: []Pixel{*px},
+	if before != nil {
+		change := &Change{
+			Pixels: []Pixel{*before},
+		}
+		undoList.push(change)
 	}
+
+	return &Change{
+		Pixels: []Pixel{*after},
+	}
+}
+
+func (s *State) pen() *Change {
+	return s.setSinglePixelTool(s.color)
 }
 
 func (s *State) eraser() *Change {
-	px := s.paintPixel(0)
-	if px == nil {
-		return nil
+	return s.setSinglePixelTool(0)
+}
+
+func (s State) getNeighbors(center Pixel) []Pixel {
+	color := center.Color
+	res := make([]Pixel, 0, 4)
+	if center.Y > 0 && color == s.canvas[center.Y-1][center.X] {
+		res = append(res, Pixel{X: center.X, Y: center.Y - 1, Color: color})
 	}
 
-	return &Change{
-		Pixels: []Pixel{*px},
+	if center.X > 0 && color == s.canvas[center.Y][center.X-1] {
+		res = append(res, Pixel{X: center.X - 1, Y: center.Y, Color: color})
+	}
+
+	if center.Y < s.canvasHeight-1 && color == s.canvas[center.Y+1][center.X] {
+		res = append(res, Pixel{X: center.X, Y: center.Y + 1, Color: color})
+	}
+
+	if center.X < s.canvasWidth-1 && color == s.canvas[center.Y][center.X+1] {
+		res = append(res, Pixel{X: center.X + 1, Y: center.Y, Color: color})
+	}
+
+	return res
+}
+
+func (s *State) paintNeighbors(px Pixel, after *[]Pixel, before *[]Pixel) {
+	nbs := s.getNeighbors(px)
+
+	afterPx, beforePx := s.paintPixel(s.color, px.X, px.Y)
+	if afterPx != nil {
+		*after = append(*after, *afterPx)
+
+		if beforePx != nil {
+			*before = append(*before, *beforePx)
+		}
+
+		for _, n := range nbs {
+			s.paintNeighbors(n, after, before)
+		}
 	}
 }
 
-func (s *State) paintPixel(color common.Color) *Pixel {
-	if s.cursor.Y >= s.canvasHeight || s.cursor.X >= s.canvasWidth {
-		log.Printf("Error: Cursor (%d, %d) is out of canvas\n", s.cursor.X, s.cursor.Y)
-		return nil
+func (s *State) bucket() *Change {
+	cursorPx := Pixel{
+		X:     s.cursor.X,
+		Y:     s.cursor.Y,
+		Color: s.canvas[s.cursor.Y][s.cursor.X],
 	}
 
-	if s.canvas[s.cursor.Y][s.cursor.X] != color {
-		chng := &Change{
-			Pixels: []Pixel{{X: s.cursor.X, Y: s.cursor.Y, Color: s.canvas[s.cursor.Y][s.cursor.X]}},
+	after := make([]Pixel, 0, 10)
+	before := make([]Pixel, 0, 10)
+
+	s.paintNeighbors(cursorPx, &after, &before)
+	if len(after) > 0 {
+		undoChange := &Change{
+			Pixels: before,
 		}
-		undoList.push(chng)
-		s.canvas[s.cursor.Y][s.cursor.X] = color
-		return &Pixel{
-			X:     s.cursor.X,
-			Y:     s.cursor.Y,
-			Color: color,
+
+		undoList.push(undoChange)
+
+		return &Change{
+			Pixels: after,
 		}
 	}
 
 	return nil
+}
+
+func (s *State) paintPixel(color common.Color, x, y uint8) (*Pixel, *Pixel) {
+	if y >= s.canvasHeight || x >= s.canvasWidth {
+		log.Printf("Error: Cursor (%d, %d) is out of canvas\n", x, y)
+		return nil, nil
+	}
+
+	if s.canvas[y][x] != color {
+		before := &Pixel{
+			X:     x,
+			Y:     y,
+			Color: s.canvas[y][x],
+		}
+
+		s.canvas[y][x] = color
+		after := &Pixel{
+			X:     x,
+			Y:     y,
+			Color: color,
+		}
+
+		return after, before
+	}
+
+	return nil, nil
 }
 
 func (s State) CreateDisplayMessage() hat.DisplayMessage {
