@@ -64,59 +64,71 @@ func (c *Controller) do() {
 			return
 
 		case je := <-c.joystickEvents:
-			switch je {
-			case hat.MoveUp:
-				change = c.state.GoUp()
-
-			case hat.MoveLeft:
-				change = c.state.GoLeft()
-
-			case hat.MoveDown:
-				change = c.state.GoDown()
-
-			case hat.MoveRight:
-				change = c.state.GoRight()
-
-			case hat.Pressed:
-				change = c.state.Paint()
-			}
+			change = c.handleJoystickEvent(je)
 
 		case e := <-c.clientEvents:
-			switch data := e.(type) {
-			case webapp.ClientEventRegistered:
-				id := uint64(data)
-				c.registered(id)
-
-			case webapp.ClientEventReset:
-				if data {
-					change = c.state.Reset()
-				}
-
-			case webapp.ClientEventSetColor:
-				color := common.Color(data)
-				change = c.state.SetColor(color)
-
-			case webapp.ClientEventSetTool:
-				var err error
-				change, err = c.state.SetTool(string(data))
-				if err != nil {
-					log.Printf(err.Error())
-					change = nil
-				}
-
-			case webapp.ClientEventDownload:
-				ch := chan [][]common.Color(data)
-				ch <- c.state.GetCanvasClone()
-
-			case webapp.ClientEventUndo:
-				change = c.state.Undo()
-			}
+			change = c.handleWebClientEvent(e)
 		}
 
 		if change != nil {
 			c.Update(change)
 		}
 	}
+}
+
+func (c *Controller) handleWebClientEvent(e webapp.ClientEvent) *state.Change {
+	switch data := e.(type) {
+	case webapp.ClientEventRegistered:
+		id := uint64(data)
+		c.registered(id)
+
+	case webapp.ClientEventReset:
+		if data {
+			return c.state.Reset()
+		}
+
+	case webapp.ClientEventSetColor:
+		color := common.Color(data)
+		return c.state.SetColor(color)
+
+	case webapp.ClientEventSetTool:
+		var err error
+		change, err := c.state.SetTool(string(data))
+		if err != nil {
+			log.Printf(err.Error())
+			return nil
+		}
+		return change
+
+	case webapp.ClientEventDownload:
+		ch := chan [][]common.Color(data)
+		ch <- c.state.GetCanvasClone()
+
+	case webapp.ClientEventUndo:
+		return c.state.Undo()
+	}
+
+	return nil
+}
+
+func (c *Controller) handleJoystickEvent(je hat.Event) *state.Change {
+	switch je {
+	case hat.MoveUp:
+		return c.state.GoUp()
+
+	case hat.MoveLeft:
+		return c.state.GoLeft()
+
+	case hat.MoveDown:
+		return c.state.GoDown()
+
+	case hat.MoveRight:
+		return c.state.GoRight()
+
+	case hat.Pressed:
+		return c.state.Paint()
+	}
+	return nil
 }
 
 func (c *Controller) stop(signals chan os.Signal) {

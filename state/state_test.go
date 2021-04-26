@@ -368,7 +368,7 @@ func TestState_Undo(t *testing.T) {
 
 func TestBucket(t *testing.T) {
 	s := NewState(8, 8)
-	s.canvas = [][]common.Color{
+	s.canvas = Canvas{
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 1, 1, 1, 1, 1, 0},
@@ -381,7 +381,7 @@ func TestBucket(t *testing.T) {
 
 	s.cursor.Y = 4
 	s.cursor.X = 4
-	s.toolName = bucketName
+	_, _ = s.SetTool(bucketName)
 	s.color = 2
 	s.Paint()
 	expected := Canvas{
@@ -473,5 +473,38 @@ func TestBucket(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, s.canvas) {
 		t.Errorf("should fill the square")
+	}
+
+	s.canvas = Canvas{
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+	}
+
+	s.color = 6
+	change := s.Paint()
+
+	expected = Canvas{
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+		{6, 6, 6, 6, 6, 6, 6, 6},
+	}
+
+	if !reflect.DeepEqual(expected, s.canvas) {
+		t.Errorf("should fill the square")
+	}
+
+	if len(change.Pixels) != int(s.canvasWidth*s.canvasWidth) {
+		t.Errorf("Change is too big")
 	}
 }

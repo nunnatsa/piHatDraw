@@ -185,19 +185,18 @@
 
         const cursorElement = document.getElementById(cursorID)
         cursorElement.style.color = reverseColor(cursorElement.style.backgroundColor)
-        switch (tool) {
-            case "pen":
-                cursorElement.innerText = '+'
-                break
-            case "eraser":
-                cursorElement.innerText = 'x'
-                break
-            case "bucket":
-                cursorElement.innerText = 'o'
-                break
-            default:
-                cursorElement.innerText = '?'
-        }
+        cursorElement.innerText = function(tool) {
+            switch (tool) {
+                case "pen":
+                    return '+'
+                case "eraser":
+                    return 'x'
+                case "bucket":
+                    return 'o'
+                default:
+                    return '?'
+            }
+        }(tool)
 
         if (tool === "pen") {
             toolTypePen.checked = "checked"
