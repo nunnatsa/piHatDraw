@@ -6,22 +6,6 @@ import (
 	"testing"
 )
 
-func TestEmbed(t *testing.T) {
-	file, err := indexTemplate.Open("index.gohtml")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	stat, err := file.Stat()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if stat.Size() == 0 {
-		t.Fatal("should not be empty")
-	}
-}
-
 func TestIndexPage_ServeHTTP(t *testing.T) {
 	expected := "hello there"
 	ip := indexPage(expected)

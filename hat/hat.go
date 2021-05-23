@@ -143,11 +143,19 @@ func (h *Hat) drawScreen(screenChange DisplayMessage) {
 			fb.SetPixel(x, y, toHatColor(screenChange.Screen[y][x]))
 		}
 	}
-	fb.SetPixel(int(screenChange.CursorX), int(screenChange.CursorY), redColor)
+
+	cursorOrigColor := toHatColor(screenChange.Screen[screenChange.CursorY][screenChange.CursorX])
+	cursorColor := reversColor(cursorOrigColor)
+
+	fb.SetPixel(int(screenChange.CursorX), int(screenChange.CursorY), cursorColor)
 	err := screen.Draw(fb)
 	if err != nil {
 		log.Println("error while printing to HAT display:", err)
 	}
+}
+
+func reversColor(c color.Color) color.Color {
+	return c ^ 0b1111111111111111
 }
 
 func (h Hat) gracefulShutDown() {

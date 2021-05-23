@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/nunnatsa/piHatDraw/notifier"
 	"github.com/nunnatsa/piHatDraw/webapp"
@@ -47,6 +48,13 @@ func init() {
 	canvasHeight = uint8(height)
 
 	port = uint16(prt)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("In your web browser, go to http://%s:%d\n", hostname, port)
 }
 
 func main() {

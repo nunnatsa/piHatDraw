@@ -75,7 +75,7 @@
         <p>
             <input id="pickColorFromPixel" type="button" value="Get current pixel color">
         </p>
-        <form method="get" action="http://{{.Host}}:{{.Port}}/api/canvas/download">
+        <form method="get" action="/api/canvas/download">
             <p>
                 <label id="pixelSizeRangeLabel" for="pixelSizeRange"></label>
             </p>
@@ -108,7 +108,8 @@
     let color
     let win
 
-    const socket = new WebSocket("ws://{{.Host}}:{{.Port}}/api/canvas/register");
+    const wsURL = `ws://${location.host}/api/canvas/register`;
+    const socket = new WebSocket(wsURL);
 
     function markWindowBorders(i, j, td) {
         if (i === win.y) {
@@ -212,7 +213,7 @@
     const colorPicker = document.getElementById("colorPicker")
     colorPicker.onchange = function (e) {
         $.post(
-            "http://{{.Host}}:{{.Port}}/api/canvas/color",
+            "/api/canvas/color",
             data = JSON.stringify({'color': colorPicker.value}),
             dataType = "json"
         )
@@ -243,7 +244,7 @@
             const reqData = `{"color": "#${color.toString(16).padStart(6, '0')}"}`
 
             $.post(
-                "http://{{.Host}}:{{.Port}}/api/canvas/color",
+                "/api/canvas/color",
                 data = reqData,
                 dataType = "json"
             )
@@ -254,7 +255,7 @@
     resetBtn.onclick = function (e) {
         if (confirm("Are you sure you want to reset? it will delete the whole picture. You can't undo this!")) {
             $.post(
-                "http://{{.Host}}:{{.Port}}/api/canvas/reset",
+                "/api/canvas/reset",
                 data = `{"reset": true}`,
                 dataType = "json"
             )
@@ -264,7 +265,7 @@
     const undoButton = document.getElementById("undo")
     undoButton.onclick = function (e) {
         $.post(
-            "http://{{.Host}}:{{.Port}}/api/canvas/undo",
+            "/api/canvas/undo",
             data = `{"undo": true}`,
             dataType = "json"
         )
@@ -277,7 +278,7 @@
 
     function setTool(toolName) {
         $.post(
-            "http://{{.Host}}:{{.Port}}/api/canvas/tool",
+            "/api/canvas/tool",
             data = JSON.stringify({'toolName': toolName}),
             dataType = "json"
         )
@@ -295,8 +296,8 @@
         }
 
         const r = 255 - parseInt(colors[1])
-        const g = 255 - parseInt(colors[1])
-        const b = 255 - parseInt(colors[1])
+        const g = 255 - parseInt(colors[2])
+        const b = 255 - parseInt(colors[3])
 
         return `rgb(${r}, ${g}, ${b}`
     }

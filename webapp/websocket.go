@@ -20,6 +20,9 @@ var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1500,
 		WriteBufferSize: 1500,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
 )
 
@@ -50,7 +53,7 @@ func (ca WebApplication) GetMux() *http.ServeMux {
 func NewWebApplication(mailbox *notifier.Notifier, port uint16, ch chan<- ClientEvent) *WebApplication {
 	mux := http.NewServeMux()
 	ca := &WebApplication{mux: mux, notifier: mailbox, clientEvents: ch}
-	mux.Handle("/", newIndexPage(port))
+	mux.Handle("/", indexPageContent)
 	mux.HandleFunc("/api/canvas/register", ca.register)
 	mux.HandleFunc("/api/canvas/color", ca.setColor)
 	mux.HandleFunc("/api/canvas/tool", ca.setTool)
@@ -169,15 +172,27 @@ func (ca WebApplication) reset(w http.ResponseWriter, r *http.Request) {
 
 func (ca WebApplication) downloadImage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, `{"error": "wrong request"}`)
+			return
+		}
 
 		pixelSizeStr := r.Form.Get("pixelSize")
 		pixelSize, err := strconv.Atoi(pixelSizeStr)
+
 		if err != nil || pixelSize < 1 || pixelSize > 20 {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, `{"error": "wrong pixel size"}`)
 			return
+		}
+
+		fileName := r.Form.Get("fileName")
+		if fileName == "" {
+			fileName = "untitled.png"
 		}
 
 		canvasChannel := make(chan [][]common.Color)
@@ -192,10 +207,10 @@ func (ca WebApplication) downloadImage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Add("Content-Disposition", `attachment; filename="untitled.png"`)
+		w.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
 		w.Header().Set("Content-Type", "image/png")
 
-		log.Println("downloading a file; pixel size =", pixelSize)
+		log.Printf("downloading a file %s; pixel size = %d\n", fileName, pixelSize)
 		png.Encode(w, imageCanvas)
 
 	} else {
