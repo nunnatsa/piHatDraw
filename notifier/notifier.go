@@ -72,3 +72,9 @@ func (n *Notifier) NotifyOne(id uint64, data []byte) {
 func (n Notifier) sendToSubscriber(subscriber chan<- []byte, data []byte) {
 	subscriber <- data
 }
+
+func (n Notifier) Close() {
+	for id := range n.clientMap {
+		n.Unsubscribe(id)
+	}
+}
