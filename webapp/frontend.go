@@ -1,20 +1,22 @@
 package webapp
 
 import (
+	"embed"
 	_ "embed"
-	"log"
+	"io/fs"
 	"net/http"
 )
 
-type indexPage []byte
+//go:embed site/*
+var site embed.FS
 
-func (ip indexPage) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	_, err := w.Write(ip)
+var ui http.Handler
+
+func init() {
+	s, err := fs.Sub(site, "site")
 	if err != nil {
-		log.Println(err)
+		panic("can't access the ui files")
 	}
-}
 
-//go:embed index.gohtml
-var indexPageContent indexPage
+	ui = http.FileServer(http.FS(s))
+}

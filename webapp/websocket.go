@@ -53,7 +53,8 @@ func (ca WebApplication) GetMux() *http.ServeMux {
 func NewWebApplication(mailbox *notifier.Notifier, port uint16, ch chan<- ClientEvent) *WebApplication {
 	mux := http.NewServeMux()
 	ca := &WebApplication{mux: mux, notifier: mailbox, clientEvents: ch}
-	mux.Handle("/", indexPageContent)
+	//mux.Handle("/", indexPageContent)
+	mux.Handle("/", ui)
 	mux.HandleFunc("/api/canvas/register", ca.register)
 	mux.HandleFunc("/api/canvas/color", ca.setColor)
 	mux.HandleFunc("/api/canvas/tool", ca.setTool)
@@ -90,7 +91,8 @@ func (ca WebApplication) register(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		log.Println("Connection is closed")
+
+		log.Printf("Connection %d is closed\n", id)
 	} else {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

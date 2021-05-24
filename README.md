@@ -24,3 +24,4 @@ For each post, there is a coresponding tag with the relevant code:
 * [Chapter 5: Download the Picture](https://nunnatsa.github.io/piHatDraw/ch5.html) - [v0.0.5](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.5)
 * [Chapter 6: Undo](https://nunnatsa.github.io/piHatDraw/ch6.html) - [v0.0.6](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.6)
 * [Chapter 7: The Bucket Tool](https://nunnatsa.github.io/piHatDraw/ch7.html) - [v0.0.7](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.7)
+* Working on the next chapter: Replacing the UI to vue and vuetify, and compiling for another architecture.

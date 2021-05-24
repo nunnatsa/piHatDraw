@@ -59,6 +59,7 @@ func init() {
 
 func main() {
 	n := notifier.NewNotifier()
+	defer n.Close()
 
 	clientEvents := make(chan webapp.ClientEvent)
 	webApplication := webapp.NewWebApplication(n, port, clientEvents)
