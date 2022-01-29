@@ -42,7 +42,7 @@ We’ll start from common definitions that will serve several packages. create a
 Some IDEs will add the package common line. In this case, skip this line.
 
 Copy the following code into the new file, and save it:
-```{go, attr.source='.numberLines'}
+``` {go, attr.source='.numberLines'}
 package common
  
 const (
