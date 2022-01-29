@@ -1,5 +1,5 @@
 ![opening image](assets/ch1/chapter1_small.png)
-# PiHatDraw – Chapter 1: Start Drawing
+# Chapter 1: Start Drawing
 This is the second post in the PiHatDraw series. In this post, we’ll build a simple drawing application to run on a Raspberry Pi with a Sense HAT. We’ll use the go programming language (or “golang”). If you didn’t already, please read the [introduction post](introduction.md) to learn what we’re are going to build and how to build the development environment.
 
 ## Getting the code
@@ -515,5 +515,5 @@ To turn the application off, use **CTRL+C** in the terminal that run it.
 
 It wasn't short but I hope you enjoy it. Please use the comment, ask questions or argue. I’ll be glad to make this tutorial and the application better.
 
-In the next post we’ll add a web based display, to be sync with the Sense HAT display.
+In the [next post](ch2.md) we’ll add a web based display, to be sync with the Sense HAT display.
 

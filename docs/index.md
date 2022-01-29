@@ -5,7 +5,7 @@ PiHatDraw is an application that uses the Sense HAT joystick to draw pictures, a
 
 ![image](assets/introduction/site-preview.png)
 
-In this first post, we’ll set up the development environment, then in the coming posts, we’ll build the application. First, we’ll [build a simple black and white drawing application that will only use the HAT display for painting](ch1.md). Then we’ll synchronize the draw with a web page. Later, we will resize our canvas beyond the boundaries of the 8×8 HAT LED display. Then, we’ll add colors and control such as reset, delete, and so on, and add the ability to download the picture as an image file. Later, we’ll add the undo feature and the bucket paint tool.
+In this first post, we’ll set up the development environment, then in the coming posts, we’ll build the application. First, we’ll [build a simple black and white drawing application that will only use the HAT display for painting](ch1.md). Then we’ll [synchronize the draw with a web page](ch2.md). Later, we will resize our canvas beyond the boundaries of the 8×8 HAT LED display. Then, we’ll add colors and control such as reset, delete, and so on, and add the ability to download the picture as an image file. Later, we’ll add the undo feature and the bucket paint tool.
 
 ### The github Repository
 The source code of the PiHatDraw application is in github. The latest version is in this repository: https://github.com/nunnatsa/piDraw. Fill free to clone or fork this repository.
