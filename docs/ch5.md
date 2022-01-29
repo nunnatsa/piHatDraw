@@ -104,7 +104,7 @@ unc (ca WebApplication) downloadImage(w http.ResponseWriter, r *http.Request) {
    }
 }
 ```
-First, we make sure this is a GET request, then, we want to get the pixelSize query parameter from the request. To do that, we first need to call the request's ParseForm function, to process the form (line 3). Now we can access the form fields. in lines 5 – 12, we're getting the `pixelSize` query parameter as a string, converting it to an integer, and validating that it is indeed a number and that its value is between 1 and 20 pixels. If the validation fails, we are returning a JSON response with an error. The HTTP status is 400 “Bad Request”, because the input is wrong.
+First, we make sure this is a GET request, then, we want to get the pixelSize query parameter from the request. To do that, we first need to call the request's ParseForm function, to process the form (line 3). Now we can access the form fields. in lines 5 – 12, we're getting the `pixelSize` query parameter as a string, converting it to an integer, and validating that it is indeed a number and that its value is between 1 and 20 pixels. If the validation fails, we are returning a JSON response with an error. The HTTP status is 400 "Bad Request", because the input is wrong.
 
 Next, we're creating a channel of a matrix of colors. This is the callback channel – we are sending it as a `ClientEventDownload` event to the controller (lines 15 – 16). In line 17, we are waiting for the controller to send a color matrix using the channel we provided. Until that happens, the request handler goroutine is blocked.
 
@@ -227,13 +227,13 @@ case e := <-c.clientEvents:
       ch <- c.state.Canvas.Clone()
    }
 ```
-The controller, when handling the `ClientEventDownload` event, just uses the new canvas.Clone function to create a copy of the picture pixel matrix, and send it to the callback channel that was sent as the event body. Since we're performing the clone in the controller goroutine, no other event is processed during the cloning, so we can be sure that we don’t end up with a corrupted state – a state that is half modified.
+The controller, when handling the `ClientEventDownload` event, just uses the new canvas.Clone function to create a copy of the picture pixel matrix, and send it to the callback channel that was sent as the event body. Since we're performing the clone in the controller goroutine, no other event is processed during the cloning, so we can be sure that we don't end up with a corrupted state – a state that is half modified.
 
 ## Summary
 In this post, we added an option to download the picture as a PNG file. We added a download button and a slider to the web client. When the user clicks on the download button, the web browser sends a GET HTTP request with the pixelSize query parameter. The request handler handles this request by sending a callback channel to the controller. The controller sends a copy of the canvas back to the request handler in the callback channel. The request handler builds the image matrix and uses the png.Encode function to write the PNG image as the request response.
 
 ## Building and Running
-To build the piHatDraw application, use the Raspberry pi terminal: from the project directory (e.g. ~/go/src/piHatDraw), use the following command (don’t forget the dot):
+To build the piHatDraw application, use the Raspberry pi terminal: from the project directory (e.g. ~/go/src/piHatDraw), use the following command (don't forget the dot):
 ```shell
 go build .
 ```
@@ -251,6 +251,6 @@ Open the URL from the printout in your browser, in addition to the canvas matrix
 
 Try to draw something, then click on the `Download as Picture` button to get the picture as an image. Try to download the picture with different square sizes.
 
-In the [next post](ch6.md), we’ll improve the application performance, and add the undo feature.
+In the [next post](ch6.md), we'll improve the application performance, and add the undo feature.
 
 Image by [Radoan Tanvir](https://pixabay.com/users/radoan_tanvir-866268/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=5971372) from [Pixabay](https://pixabay.com/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=5971372)

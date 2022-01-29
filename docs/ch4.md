@@ -660,7 +660,7 @@ The web client code is in the webapp/index.gohtml file. We're going to make a lo
 </body>
 </html>
 ```
-We're going to add a control panel to our page. Lines 37 – 44 are the CSS settings for the new panel. The panel itself is in lines 61 – 77. In line 63, we have the color picker. We are using the standard HTML color input. The next control is the “Tool” radio button group (lines 65 – 70): the user can choose the tool (“pen” or “eraser”). Then we have the pickColorFromPixel button (line 72). This button updates the pen color to the color of the current pixel – the pixel that the cursor points to. The last control is the Reset button in line 75. This button clears the picture, sets the cursor and the window to the center of the canvas, sets the pen color to white and the tool to pen.
+We're going to add a control panel to our page. Lines 37 – 44 are the CSS settings for the new panel. The panel itself is in lines 61 – 77. In line 63, we have the color picker. We are using the standard HTML color input. The next control is the "Tool" radio button group (lines 65 – 70): the user can choose the tool ("pen" or "eraser"). Then we have the pickColorFromPixel button (line 72). This button updates the pen color to the color of the current pixel – the pixel that the cursor points to. The last control is the Reset button in line 75. This button clears the picture, sets the cursor and the window to the center of the canvas, sets the pen color to white and the tool to pen.
 
 We import jquery in line 84, so we could send requests to the application.
 
