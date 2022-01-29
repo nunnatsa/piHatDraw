@@ -16,9 +16,11 @@ The application is written in golang. It's an event driven application. It uses 
 I wrote a blog post series with a tutorial to guide how to build this application.
 
 For each post, there is a coresponding tag with the relevant code:
-* [Introduction post](https://www.fungoprogramming.tech/2021/03/20/pihatdraw%e2%80%8a-%e2%80%8adraw-with-raspberry-pi-sense-hat-golang-and-websockets/)
-* [Chapter 1: Start Drawing](https://www.fungoprogramming.tech/2021/03/20/pihatdraw-chapter-1-start-drawing/) - [v0.0.1](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.1)
-* [Chapter 2: Add Web-based display](https://www.fungoprogramming.tech/2021/03/23/pihatdraw-chapter-2-add-web-based-display-using-websockets/) - [v0.0.2](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.2)
-* [Chapter 3: Expand Canvas](https://www.fungoprogramming.tech/2021/03/25/pihatdraw-chapter-3-expand-canvas/) - [v0.0.3](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.3)
-* [Chapter 4: Adding Colors](https://www.fungoprogramming.tech/2021/04/06/pihatdraw-chapter-4-adding-colors/) - [v0.0.4](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.4)
-* [Chapter 5: Download the Picture](https://www.fungoprogramming.tech/2021/04/12/pihatdraw-chapter-5-download-the-picture/) - [v0.0.5](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.5)
+* [Introduction post](https://nunnatsa.github.io/piHatDraw/)
+* [Chapter 1: Start Drawing](https://nunnatsa.github.io/piHatDraw/ch1.html) - [v0.0.1](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.1)
+* [Chapter 2: Add Web-based display](https://nunnatsa.github.io/piHatDraw/ch2.html) - [v0.0.2](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.2)
+* [Chapter 3: Expand Canvas](https://nunnatsa.github.io/piHatDraw/ch3.html) - [v0.0.3](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.3)
+* [Chapter 4: Adding Colors](https://nunnatsa.github.io/piHatDraw/ch4.html) - [v0.0.4](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.4)
+* [Chapter 5: Download the Picture](https://nunnatsa.github.io/piHatDraw/ch5.html) - [v0.0.5](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.5)
+* [Chapter 6: Undo](https://nunnatsa.github.io/piHatDraw/ch6.html) - [v0.0.6](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.6)
+* [Chapter 7: The Bucket Tool](https://nunnatsa.github.io/piHatDraw/ch7.html) - [v0.0.7](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.7)
