@@ -39,7 +39,7 @@ func TestControllerStart(t *testing.T) {
 	client1 := n.Subscribe(reg1)
 	client2 := n.Subscribe(reg2)
 
-	done := make(chan bool)
+	done := make(chan struct{})
 	defer close(done)
 
 	c := &Controller{
