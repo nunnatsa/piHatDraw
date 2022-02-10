@@ -18,7 +18,7 @@ type Controller struct {
 	hat            hat.Interface
 	joystickEvents chan hat.Event
 	screenEvents   chan hat.DisplayMessage
-	done           chan bool
+	done           chan struct{}
 	state          *state.State
 	notifier       *notifier.Notifier
 	clientEvents   <-chan webapp.ClientEvent
@@ -32,14 +32,14 @@ func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.Clien
 		hat:            hat.NewHat(je, se),
 		joystickEvents: je,
 		screenEvents:   se,
-		done:           make(chan bool),
+		done:           make(chan struct{}),
 		state:          state.NewState(canvasWidth, canvasHeight),
 		notifier:       notifier,
 		clientEvents:   clientEvents,
 	}
 }
 
-func (c Controller) Start() <-chan bool {
+func (c Controller) Start() <-chan struct{} {
 	go c.do()
 	return c.done
 }
