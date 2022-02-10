@@ -66,7 +66,7 @@ func NewDisplayMessage(mat [][]common.Color, x, y uint8) DisplayMessage {
 type Hat struct {
 	events chan<- Event
 	screen <-chan DisplayMessage
-	done   chan bool
+	done   chan struct{}
 	input  *stick.Device
 }
 
@@ -74,7 +74,7 @@ func NewHat(joystickEvents chan<- Event, screenEvents <-chan DisplayMessage) *Ha
 	return &Hat{
 		events: joystickEvents,
 		screen: screenEvents,
-		done:   make(chan bool),
+		done:   make(chan struct{}),
 	}
 }
 
@@ -84,7 +84,7 @@ func (h *Hat) Start() {
 }
 
 func (h *Hat) Stop() {
-	h.done <- true
+	close(h.done)
 }
 
 func (h *Hat) init() {
