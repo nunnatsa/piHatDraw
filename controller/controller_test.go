@@ -23,18 +23,18 @@ func TestControllerStart(t *testing.T) {
 		canvasHeight = 24
 	)
 	s := state.NewState(canvasWidth, canvasHeight)
-	je := make(chan hat.Event)
-	se := make(chan hat.DisplayMessage)
+	je := make(chan hat.Event, 1)
+	se := make(chan hat.DisplayMessage, 1)
 	n := notifier.NewNotifier()
-	ce := make(chan webapp.ClientEvent)
+	ce := make(chan webapp.ClientEvent, 1)
 
 	hatMock := &hatMock{
 		je: je,
 		se: se,
 	}
 
-	reg1 := make(chan []byte)
-	reg2 := make(chan []byte)
+	reg1 := make(chan []byte, 1)
+	reg2 := make(chan []byte, 1)
 
 	client1 := n.Subscribe(reg1)
 	client2 := n.Subscribe(reg2)

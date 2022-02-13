@@ -61,7 +61,7 @@ func TestNotifyAll(t *testing.T) {
 	channels := make([]chan []byte, numSubscribers)
 
 	for i := 0; i < numSubscribers; i++ {
-		ch := make(chan []byte)
+		ch := make(chan []byte, 1)
 		channels[i] = ch
 		n.Subscribe(ch)
 	}
@@ -90,7 +90,7 @@ func TestNotifyOne(t *testing.T) {
 	n := NewNotifier()
 	defer cleanup(n)
 
-	ch := make(chan []byte)
+	ch := make(chan []byte, 1)
 	id := n.Subscribe(ch)
 
 	n.NotifyOne(id, []byte("message"))
