@@ -78,7 +78,7 @@ func (ca WebApplication) register(w http.ResponseWriter, r *http.Request) {
 
 		defer conn.Close()
 
-		subscription := make(chan []byte)
+		subscription := make(chan []byte, 1)
 
 		id := ca.notifier.Subscribe(subscription)
 		defer ca.notifier.Unsubscribe(id)

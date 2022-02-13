@@ -25,8 +25,8 @@ type Controller struct {
 }
 
 func NewController(notifier *notifier.Notifier, clientEvents <-chan webapp.ClientEvent, canvasWidth uint8, canvasHeight uint8) *Controller {
-	je := make(chan hat.Event)
-	se := make(chan hat.DisplayMessage)
+	je := make(chan hat.Event, 1)
+	se := make(chan hat.DisplayMessage, 1)
 
 	return &Controller{
 		hat:            hat.NewHat(je, se),

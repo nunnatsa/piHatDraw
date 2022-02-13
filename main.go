@@ -61,7 +61,7 @@ func main() {
 	n := notifier.NewNotifier()
 	defer n.Close()
 
-	clientEvents := make(chan webapp.ClientEvent)
+	clientEvents := make(chan webapp.ClientEvent, 1)
 	webApplication := webapp.NewWebApplication(n, port, clientEvents)
 
 	portStr := fmt.Sprintf(":%d", port)

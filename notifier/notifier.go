@@ -57,13 +57,13 @@ func (n *Notifier) Unsubscribe(id uint64) {
 
 func (n *Notifier) NotifyAll(data []byte) {
 	for _, subscriber := range n.clientMap {
-		go n.sendToSubscriber(subscriber, data)
+		n.sendToSubscriber(subscriber, data)
 	}
 }
 
 func (n *Notifier) NotifyOne(id uint64, data []byte) {
 	if subscriber, ok := n.clientMap[id]; ok {
-		go n.sendToSubscriber(subscriber, data)
+		n.sendToSubscriber(subscriber, data)
 	} else {
 		log.Printf("subscriber id %d was not found", id)
 	}
