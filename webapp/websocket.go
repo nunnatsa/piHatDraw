@@ -198,6 +198,7 @@ func (ca WebApplication) downloadImage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		canvasChannel := make(chan [][]common.Color)
+		defer close(canvasChannel)
 		ca.clientEvents <- ClientEventDownload(canvasChannel)
 		imageData := <-canvasChannel
 
