@@ -95,14 +95,13 @@ func (c *Controller) handleWebClientEvent(e webapp.ClientEvent) *state.Change {
 		var err error
 		change, err := c.state.SetTool(string(data))
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return nil
 		}
 		return change
 
 	case webapp.ClientEventDownload:
-		ch := chan [][]common.Color(data)
-		ch <- c.state.GetCanvasClone()
+		data <- c.state.GetCanvasClone()
 
 	case webapp.ClientEventUndo:
 		return c.state.Undo()
