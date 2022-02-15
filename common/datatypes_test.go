@@ -4,93 +4,68 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestColor_MarshalJSON(t *testing.T) {
-	c := Color(0)
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(c); err != nil {
-		t.Fatal(err)
-	}
-
-	if res := buf.String(); "\"#000000\"\n" != res {
-		t.Fatalf(`should be "#000000" but it's %#v'`, res)
-	}
-
-	buf.Reset()
-	c = Color(0xFFFFFF)
-	if err := json.NewEncoder(&buf).Encode(c); err != nil {
-		t.Fatal(err)
-	}
-
-	if res := buf.String(); "\"#ffffff\"\n" != res {
-		t.Fatalf(`should be "#ffffff" but it's %#v'`, res)
-	}
-
-	buf.Reset()
-	c = Color(0xFFFFFFFF)
-	if err := json.NewEncoder(&buf).Encode(c); err != nil {
-		t.Fatal(err)
-	}
-
-	if res := buf.String(); "\"#ffffff\"\n" != res {
-		t.Fatalf(`should be "#ffffff" but it's %#v'`, res)
-	}
-
-	buf.Reset()
-	cs := []Color{0xFF0000, 0x00FF00, 0x0000FF}
-
-	if err := json.NewEncoder(&buf).Encode(cs); err != nil {
-		t.Fatal(err)
-	}
-
-	if res := buf.String(); "[\"#ff0000\",\"#00ff00\",\"#0000ff\"]\n" != res {
-		t.Fatalf(`should be "["#ff0000","#00ff00","#0000ff"]" but it's %#v'`, res)
-	}
+func TestCommon(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "common Suite")
 }
 
-func TestColor_UnmarshalJSON(t *testing.T) {
-	val := `"#000000"`
-	var c Color
-	err := json.Unmarshal([]byte(val), &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+var _ = Describe("Test the common package", func() {
+	Context("test color.MarshalJSON", func() {
+		It("should decode 0", func() {
+			c := Color(0)
+			var buf bytes.Buffer
+			Expect(json.NewEncoder(&buf).Encode(c)).ToNot(HaveOccurred())
 
-	if c != 0 {
-		t.Fatalf("should be 0, but its %x", c)
-	}
+			Expect(buf.String()).Should(Equal("\"#000000\"\n"))
+		})
 
-	val = `"#ffffff"`
-	err = json.Unmarshal([]byte(val), &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+		It("should decode 0xFFFFFF", func() {
+			c := Color(0xFFFFFF)
+			var buf bytes.Buffer
+			Expect(json.NewEncoder(&buf).Encode(c)).ToNot(HaveOccurred())
 
-	if c != 0xffffff {
-		t.Fatalf("should be 0xffffff, but its %x", c)
-	}
+			Expect(buf.String()).Should(Equal("\"#ffffff\"\n"))
+		})
 
-	vals := `["#ff0000", "#00ff00", "#0000ff"]`
-	cs := make([]Color, 0, 10)
-	err = json.Unmarshal([]byte(vals), &cs)
-	if err != nil {
-		t.Fatal(err)
-	}
+		It("should ignore 8 MSB", func() {
+			c := Color(0xFFFFFFFF)
+			var buf bytes.Buffer
+			Expect(json.NewEncoder(&buf).Encode(c)).ToNot(HaveOccurred())
 
-	if len(cs) != 3 {
-		t.Fatalf("should be length of 3, but it's %d", len(cs))
-	}
+			Expect(buf.String()).Should(Equal("\"#ffffff\"\n"))
+		})
 
-	if cs[0] != 0xFF0000 {
-		t.Fatalf("should be 0xFF0000, but it's %X", cs[0])
-	}
+		It("should encode an array of colors", func() {
+			var buf bytes.Buffer
+			cs := []Color{0xFF0000, 0x00FF00, 0x0000FF}
 
-	if cs[1] != 0x00FF00 {
-		t.Fatalf("should be 0x00FF00, but it's %X", cs[1])
-	}
+			Expect(json.NewEncoder(&buf).Encode(cs)).ToNot(HaveOccurred())
+			Expect(buf.String()).Should(Equal("[\"#ff0000\",\"#00ff00\",\"#0000ff\"]\n"))
+		})
+	})
 
-	if cs[2] != 0x0000FF {
-		t.Fatalf("should be 0x0000FF, but it's %X", cs[2])
-	}
-}
+	Context("test color.UnmarshalJSON", func() {
+		It("should decode #000000", func() {
+			var c Color
+			Expect(json.Unmarshal([]byte(`"#000000"`), &c)).ToNot(HaveOccurred())
+			Expect(c).Should(BeEquivalentTo(0))
+		})
+
+		It("should decode #ffffff", func() {
+			var c Color
+			Expect(json.Unmarshal([]byte(`"#ffffff"`), &c)).ToNot(HaveOccurred())
+			Expect(c).Should(BeEquivalentTo(0xFFFFFF))
+		})
+
+		It("should decode an array of colors", func() {
+			var c []Color
+			Expect(json.Unmarshal([]byte(`["#ff0000", "#00ff00", "#0000ff"]`), &c)).ToNot(HaveOccurred())
+			Expect(c).Should(Equal([]Color{0xFF0000, 0x00FF00, 0x0000FF}))
+		})
+	})
+})

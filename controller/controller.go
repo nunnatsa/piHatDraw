@@ -139,9 +139,7 @@ func (c *Controller) stop(signals chan os.Signal) {
 
 func (c *Controller) Update(change *state.Change) {
 	msg := c.state.CreateDisplayMessage()
-	go func() {
-		c.screenEvents <- msg
-	}()
+	c.screenEvents <- msg
 
 	js, err := json.Marshal(change)
 	if err != nil {
