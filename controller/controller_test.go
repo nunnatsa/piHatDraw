@@ -2,8 +2,10 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/nunnatsa/piHatDraw/common"
 	"github.com/nunnatsa/piHatDraw/hat"
@@ -14,14 +16,22 @@ import (
 
 const (
 	eraserToolName = "eraser"
+	bucketToolName = "bucket"
 	penToolName    = "pen"
+
+	canvasWidth  = 40
+	canvasHeight = 24
+	y            = uint8(canvasHeight / 2)
+	x            = uint8(canvasWidth / 2)
 )
 
-func TestControllerStart(t *testing.T) {
-	const (
-		canvasWidth  = 40
-		canvasHeight = 24
-	)
+func TestController(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Controller Suite")
+
+}
+
+var _ = Describe("Controller Test", func() {
 	s := state.NewState(canvasWidth, canvasHeight)
 	je := make(chan hat.Event, 1)
 	se := make(chan hat.DisplayMessage, 1)
@@ -52,244 +62,430 @@ func TestControllerStart(t *testing.T) {
 		clientEvents:   ce,
 	}
 
-	y := uint8(canvasHeight / 2)
-	x := uint8(canvasWidth / 2)
-
 	c.Start()
 
-	msg := <-se
-	if msg.CursorX != 4 {
-		t.Errorf("msg.CursorX should be %d but it's %d", 4, msg.CursorX)
-	}
-
 	ce <- webapp.ClientEventRegistered(client1)
-	err := <-checkMoveNotifications(reg1, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
 	ce <- webapp.ClientEventRegistered(client2)
-	err = <-checkMoveNotifications(reg2, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	if msg.CursorY != 4 {
-		t.Errorf("msg.CursorY should be %d but it's %d", 4, msg.CursorY)
-	}
+	It("should build messages with the initial values", func() {
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			return true
+		}).Should(BeTrue())
 
-	ce <- webapp.ClientEventUndo(true)
-	if len(se) != 0 || len(reg1) != 0 || len(reg2) != 0 {
-		t.Error("should not initiate a chenage")
-	}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg1, x, y)
+		}).Should(BeTrue())
 
-	hatMock.MoveDown()
-	msg = <-se
-	if msg.CursorY != 5 {
-		t.Errorf("msg.CursorY should be %d but it's %d", 5, msg.CursorY)
-	}
-	err = <-checkMoveNotifications(reg1, x, y+1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = <-checkMoveNotifications(reg2, x, y+1)
-	if err != nil {
-		t.Fatal(err)
-	}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg2, x, y)
+		}).Should(BeTrue())
+	})
 
-	ce <- webapp.ClientEventUndo(true)
-	if len(se) != 0 || len(reg1) != 0 || len(reg2) != 0 {
-		t.Error("should not initiate a chenage")
-	}
+	It("should do nothing for the undo command, when there was no change yet", func() {
+		ce <- webapp.ClientEventUndo(true)
+		Consistently(se).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
 
-	hatMock.MoveUp()
-	msg = <-se
-	if msg.CursorY != 4 {
-		t.Errorf("msg.CursorY should be %d but it's %d", 4, msg.CursorY)
-	}
-	err = <-checkMoveNotifications(reg1, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = <-checkMoveNotifications(reg2, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+	It("should move down", func() {
+		hatMock.MoveDown()
 
-	ce <- webapp.ClientEventUndo(true)
-	if len(se) != 0 || len(reg1) != 0 || len(reg2) != 0 {
-		t.Error("should not initiate a chenage")
-	}
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(5))
+			Expect(msg.Screen).To(HaveLen(8))
+			return true
+		}).Should(BeTrue())
 
-	hatMock.MoveRight()
-	msg = <-se
-	if msg.CursorX != 5 {
-		t.Errorf("msg.CursorX should be %d but it's %d", 5, msg.CursorX)
-	}
-	err = <-checkMoveNotifications(reg1, x+1, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg1, x, y+1)
+		}).Should(BeTrue())
 
-	err = <-checkMoveNotifications(reg2, x+1, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg2, x, y+1)
+		}).Should(BeTrue())
 
-	ce <- webapp.ClientEventUndo(true)
-	if len(se) != 0 || len(reg1) != 0 || len(reg2) != 0 {
-		t.Error("should not initiate a change")
-	}
+		By("should do nothing for the undo command. no change in the canvas")
+		ce <- webapp.ClientEventUndo(true)
+		Consistently(se).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
 
-	hatMock.MoveLeft()
-	msg = <-se
-	if msg.CursorX != 4 {
-		t.Errorf("msg.CursorX should be %d but it's %d", 4, msg.CursorX)
-	}
-	err = <-checkMoveNotifications(reg1, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+	It("should move up", func() {
+		hatMock.MoveUp()
 
-	err = <-checkMoveNotifications(reg2, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			return true
+		}).Should(BeTrue())
 
-	ce <- webapp.ClientEventUndo(true)
-	if len(se) != 0 || len(reg1) != 0 || len(reg2) != 0 {
-		t.Error("should not initiate a change")
-	}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg1, x, y)
+		}).Should(BeTrue())
 
-	hatMock.Press()
-	msg = <-se
-	if msg.Screen[4][4] != 0xFFFFFF {
-		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
-	}
-	<-checkPaintNotifications(t, reg1, state.Pixel{X: x, Y: y, Color: 0xFFFFFF})
-	<-checkPaintNotifications(t, reg2, state.Pixel{X: x, Y: y, Color: 0xFFFFFF})
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg2, x, y)
+		}).Should(BeTrue())
 
-	clr := common.Color(0x123456)
-	ce <- webapp.ClientEventSetColor(clr)
-	<-checkNotificationsColor(t, reg1, &clr, "")
-	<-checkNotificationsColor(t, reg2, &clr, "")
+		By("should do nothing for the undo command for move event")
+		ce <- webapp.ClientEventUndo(true)
+		Consistently(se).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
 
-	ce <- webapp.ClientEventSetTool(eraserToolName)
-	<-checkNotificationsColor(t, reg1, nil, eraserToolName)
-	<-checkNotificationsColor(t, reg2, nil, eraserToolName)
+	It("should move right", func() {
+		hatMock.MoveRight()
 
-	clr = common.Color(0x654321)
-	ce <- webapp.ClientEventSetColor(clr)
-	<-checkNotificationsColor(t, reg1, &clr, "")
-	<-checkNotificationsColor(t, reg2, &clr, "")
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(5))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			return true
+		}).Should(BeTrue())
 
-	ce <- webapp.ClientEventSetTool(penToolName)
-	<-checkNotificationsColor(t, reg1, nil, penToolName)
-	<-checkNotificationsColor(t, reg2, nil, penToolName)
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg1, x+1, y)
+		}).Should(BeTrue())
 
-	ce <- webapp.ClientEventUndo(true)
-	<-checkPaintNotifications(t, reg1, state.Pixel{X: x, Y: y, Color: 0})
-	<-checkPaintNotifications(t, reg2, state.Pixel{X: x, Y: y, Color: 0})
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg2, x+1, y)
+		}).Should(BeTrue())
 
-	hatMock.Press()
-	msg = <-se
-	if msg.Screen[4][4] != 0xFFFFFF {
-		t.Errorf("msg.Screen[%d][%d] should be set", y, x)
-	}
-	<-checkPaintNotifications(t, reg1, state.Pixel{X: x, Y: y, Color: 0x654321})
-	<-checkPaintNotifications(t, reg2, state.Pixel{X: x, Y: y, Color: 0x654321})
+		By("should do nothing for the undo command for move event")
+		ce <- webapp.ClientEventUndo(true)
+		Consistently(se).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
 
-	canvasBeforeReset := s.GetCanvasClone()
-	ce <- webapp.ClientEventReset(true)
-	initColor := common.Color(0xFFFFFF)
-	<-checkNotificationsColor(t, reg1, &initColor, penToolName)
-	err = <-checkMoveNotifications(reg2, x, y)
-	if err != nil {
-		t.Fatal(err)
-	}
+	It("should move left", func() {
+		hatMock.MoveLeft()
 
-	ce <- webapp.ClientEventUndo(true)
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			return true
+		}).Should(BeTrue())
 
-	err = <-checkResetNotifications(reg1, canvasBeforeReset)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = <-checkResetNotifications(reg2, canvasBeforeReset)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg1, x, y)
+		}).Should(BeTrue())
 
-func checkMoveNotifications(reg chan []byte, x uint8, y uint8) chan error {
-	doneCheckingNotifier := make(chan error)
-	go func() {
-		defer close(doneCheckingNotifier)
+		Eventually(func() bool {
+			return checkMoveNotifications(<-reg2, x, y)
+		}).Should(BeTrue())
 
-		msg := <-reg
-		webMsg, err := getChangeFromMsg(msg)
-		if err != nil {
-			doneCheckingNotifier <- fmt.Errorf("getChangeFromMsg %v", err)
-			return
-		}
-		if webMsg.Cursor.X != x {
-			doneCheckingNotifier <- fmt.Errorf("webMsg.Cursor.X should be %d but it's %d", x, webMsg.Cursor.X)
-			return
-		}
-		if webMsg.Cursor.Y != y {
-			doneCheckingNotifier <- fmt.Errorf("webMsg.Cursor.y should be %d but it's %d", y+1, webMsg.Cursor.Y)
-			return
-		}
-	}()
-	return doneCheckingNotifier
-}
+		By("should do nothing for the undo command for move event")
+		ce <- webapp.ClientEventUndo(true)
+		Consistently(se).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
 
-func checkPaintNotifications(t *testing.T, reg chan []byte, pixels ...state.Pixel) chan bool {
-	doneCheckingNotifier := make(chan bool)
-	go func() {
-		defer close(doneCheckingNotifier)
+	It("should paint", func() {
+		hatMock.Press()
 
-		msg := <-reg
-		webMsg, err := getChangeFromMsg(msg)
-		if err != nil {
-			t.Fatal("getChangeFromMsg", err)
-		}
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			Expect(msg.Screen[4][4]).Should(BeEquivalentTo(0xFFFFFF))
+			return true
+		}).Should(BeTrue())
 
-		if len(pixels) != len(webMsg.Pixels) {
-			t.Fatalf("wrong length of webMsg.Pixels; should be %d but it's %d", len(pixels), len(webMsg.Pixels))
-		}
+		expected := state.Pixel{X: x, Y: y, Color: 0xFFFFFF}
+		Eventually(func() bool {
+			return checkPaintNotifications(<-reg1, expected)
+		}).Should(BeTrue())
 
-		for i, p := range pixels {
-			mp := webMsg.Pixels[i]
-			if mp.X != p.X || mp.Y != p.Y || mp.Color != p.Color {
-				t.Errorf("wrong pixel. Expected: %#v; Actual: %#v", p, mp)
+		Eventually(func() bool {
+			return checkPaintNotifications(<-reg2, expected)
+		}).Should(BeTrue())
+
+		By("should undo painting")
+		ce <- webapp.ClientEventUndo(true)
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			Expect(msg.Screen[4][4]).Should(BeEquivalentTo(0))
+			return true
+		}).Should(BeTrue())
+
+		expected = state.Pixel{X: x, Y: y, Color: 0}
+		Eventually(func() bool {
+			return checkPaintNotifications(<-reg1, expected)
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			return checkPaintNotifications(<-reg2, expected)
+		}).Should(BeTrue())
+	})
+
+	It("should set color", func() {
+		clr := common.Color(0x123456)
+		ce <- webapp.ClientEventSetColor(clr)
+
+		Eventually(c.screenEvents).Should(Receive())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg1)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, *webMsg.Color).To(Equal(clr))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg2)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, *webMsg.Color).To(Equal(clr))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		By("do nothing if the color was not changed")
+		ce <- webapp.ClientEventSetColor(clr)
+		Consistently(c.screenEvents).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+
+	})
+
+	It("should set tool to eraser", func() {
+		ce <- webapp.ClientEventSetTool(eraserToolName)
+
+		Eventually(c.screenEvents).Should(Receive())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg1)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(eraserToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg2)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(eraserToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+	})
+
+	It("should set tool to bucket", func() {
+		ce <- webapp.ClientEventSetTool(bucketToolName)
+
+		Eventually(c.screenEvents).Should(Receive())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg1)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(bucketToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg2)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(bucketToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+	})
+
+	It("should set tool to pen", func() {
+		ce <- webapp.ClientEventSetTool(penToolName)
+
+		Eventually(c.screenEvents).Should(Receive())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg1)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(penToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			webMsg, err := getChangeFromMsg(<-reg2)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, webMsg.ToolName).To(Equal(penToolName))
+			ExpectWithOffset(1, webMsg.Cursor).To(BeNil())
+			return true
+		}).Should(BeTrue())
+
+		By("should do nothing if the tool was not changed", func() {
+			ce <- webapp.ClientEventSetTool(penToolName)
+
+			Consistently(c.screenEvents).ShouldNot(Receive())
+			Consistently(reg1).ShouldNot(Receive())
+			Consistently(reg2).ShouldNot(Receive())
+		})
+	})
+
+	It("should ignore unknown tools", func() {
+		ce <- webapp.ClientEventSetTool("wrongToolName")
+
+		Consistently(c.screenEvents).ShouldNot(Receive())
+		Consistently(reg1).ShouldNot(Receive())
+		Consistently(reg2).ShouldNot(Receive())
+	})
+
+	It("should use bucket", func() {
+		clr := common.Color(0x00112233)
+		change, err := c.state.SetTool(bucketToolName)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(change.ToolName).Should(Equal(bucketToolName))
+
+		change = c.state.SetColor(clr)
+		Expect(*change.Color).Should(Equal(clr))
+
+		_ = c.state.GoUp()
+		_ = c.state.GoUp()
+		change = c.state.GoUp()
+		Expect(change.Cursor.Y).Should(Equal(y - 3))
+		_ = c.state.GoRight()
+		_ = c.state.GoRight()
+		_ = c.state.GoRight()
+		change = c.state.GoRight()
+		Expect(change.Cursor.X).Should(Equal(x + 4))
+
+		hatMock.Press()
+
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(7))
+			Expect(msg.CursorY).Should(BeEquivalentTo(1))
+			Expect(msg.Screen).To(HaveLen(8))
+			for y := 0; y < 8; y++ {
+				for x := 0; x < 8; x++ {
+					Expect(msg.Screen[4][4]).Should(BeEquivalentTo(clr))
+				}
 			}
-		}
+			return true
+		}).Should(BeTrue())
 
-	}()
-	return doneCheckingNotifier
+		Eventually(func() bool {
+			return checkBucketNotifications(<-reg1, clr)
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			return checkBucketNotifications(<-reg2, clr)
+		}).Should(BeTrue())
+
+		By("check reset")
+		ce <- webapp.ClientEventReset(true)
+		Eventually(func() bool {
+			msg := <-c.screenEvents
+			Expect(msg.CursorX).Should(BeEquivalentTo(4))
+			Expect(msg.CursorY).Should(BeEquivalentTo(4))
+			Expect(msg.Screen).To(HaveLen(8))
+			for y := 0; y < 8; y++ {
+				for x := 0; x < 8; x++ {
+					Expect(msg.Screen[4][4]).Should(BeEquivalentTo(0))
+				}
+			}
+			return true
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			return checkResetNotifications(<-reg1)
+		}).Should(BeTrue())
+
+		Eventually(func() bool {
+			return checkResetNotifications(<-reg2)
+		}).Should(BeTrue())
+
+	})
+})
+
+func checkMoveNotifications(msg []byte, x uint8, y uint8) bool {
+	webMsg, err := getChangeFromMsg(msg)
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, webMsg.Cursor.X).To(Equal(x))
+	ExpectWithOffset(1, webMsg.Cursor.Y).To(Equal(y))
+
+	return true
 }
 
-func checkNotificationsColor(t *testing.T, reg chan []byte, color *common.Color, tool string) chan bool {
-	doneCheckingNotifier := make(chan bool)
-	go func() {
-		defer close(doneCheckingNotifier)
+func checkPaintNotifications(msg []byte, pixels ...state.Pixel) bool {
+	webMsg, err := getChangeFromMsg(msg)
+	ExpectWithOffset(1, err).ShouldNot(HaveOccurred())
 
-		msg := <-reg
-		webMsg, err := getChangeFromMsg(msg)
-		if err != nil {
-			t.Fatal("getChangeFromMsg", err)
+	ExpectWithOffset(1, webMsg.Pixels).To(HaveLen(len(pixels)))
+
+	for i, p := range pixels {
+		mp := webMsg.Pixels[i]
+		Expect(mp).Should(Equal(p))
+	}
+
+	return true
+}
+
+func checkBucketNotifications(msg []byte, clr common.Color) bool {
+	webMsg, err := getChangeFromMsg(msg)
+	ExpectWithOffset(1, err).ShouldNot(HaveOccurred())
+
+	ExpectWithOffset(1, webMsg.Pixels).To(HaveLen(canvasWidth * canvasHeight))
+
+	checkBoard := [][]bool{
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+		{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false},
+	}
+
+	for _, px := range webMsg.Pixels {
+		Expect(px.Color).Should(Equal(clr))
+		checkBoard[px.Y][px.X] = true
+	}
+
+	for y := 0; y < canvasHeight; y++ {
+		for x := 0; x < canvasWidth; x++ {
+			Expect(checkBoard[y][x]).Should(BeTrue())
 		}
-		if color != nil {
-			if webMsg.Color == nil {
-				t.Fatal("webMsg.Cursor.Color should not be nil")
-			} else if *webMsg.Color != *color {
-				t.Fatalf("webMsg.Cursor.Pen.Color should be #%06x but it's %06x", *color, *webMsg.Color)
-			}
-		}
-		if tool != webMsg.ToolName {
-			t.Errorf(`webMsg.Cursor.ToolName should be "%s" but it's "%s"`, tool, webMsg.ToolName)
-		}
-	}()
-	return doneCheckingNotifier
+	}
+
+	return true
 }
 
 func getChangeFromMsg(msg []byte) (*state.Change, error) {
@@ -300,26 +496,25 @@ func getChangeFromMsg(msg []byte) (*state.Change, error) {
 	return s, nil
 }
 
-func checkResetNotifications(reg chan []byte, canvas [][]common.Color) chan error {
-	doneCheckingNotifier := make(chan error)
-	go func() {
-		defer close(doneCheckingNotifier)
+func checkResetNotifications(msg []byte) bool {
+	webMsg, err := getChangeFromMsg(msg)
+	ExpectWithOffset(1, err).ShouldNot(HaveOccurred())
 
-		msg := <-reg
-		webMsg, err := getChangeFromMsg(msg)
-		if err != nil {
-			doneCheckingNotifier <- fmt.Errorf("getChangeFromMsg %v", err)
-			return
+	ExpectWithOffset(1, webMsg.Canvas).To(HaveLen(canvasHeight))
+	for _, line := range webMsg.Canvas {
+		ExpectWithOffset(1, line).To(HaveLen(canvasWidth))
+		for _, px := range line {
+			ExpectWithOffset(1, px).Should(BeEquivalentTo(0))
 		}
+	}
+	ExpectWithOffset(1, *webMsg.Color).Should(BeEquivalentTo(0xFFFFFF))
+	ExpectWithOffset(1, webMsg.Cursor).ShouldNot(BeNil())
+	ExpectWithOffset(1, webMsg.Cursor.X).Should(BeEquivalentTo(x))
+	ExpectWithOffset(1, webMsg.Cursor.Y).Should(BeEquivalentTo(y))
+	ExpectWithOffset(1, webMsg.ToolName).Should(BeEquivalentTo(penToolName))
+	ExpectWithOffset(1, webMsg.Window).ShouldNot(BeNil())
+	ExpectWithOffset(1, webMsg.Window.X).Should(BeEquivalentTo(x - 4))
+	ExpectWithOffset(1, webMsg.Window.Y).Should(BeEquivalentTo(y - 4))
 
-		for y, line := range webMsg.Canvas {
-			for x, val := range line {
-				if val != canvas[y][x] {
-					doneCheckingNotifier <- fmt.Errorf("canvas (%d, %d) = #%06x; msg (%d, %d) = #%06x", x, y, val, x, y, canvas[y][x])
-					return
-				}
-			}
-		}
-	}()
-	return doneCheckingNotifier
+	return true
 }

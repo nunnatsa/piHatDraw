@@ -1,37 +1,43 @@
 package hat
 
-import "testing"
+import (
+	"testing"
 
-func TestToHatColorRed(t *testing.T) {
-	if res := toHatColor(0xFFFFFF); res != 0xFFFF {
-		t.Errorf("should be 0xFFFF, but it 0x%X", res)
-	}
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-	if res := toHatColor(0b000001110000000000000000); res != 0 {
-		t.Errorf("should be 0, but it 0x%X", res)
-	}
+func TestHat(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "hat Suite")
 }
 
-func TestToHatColorGreen(t *testing.T) {
-	if res := toHatColor(0b111110000000000000000000); res != 0xF800 {
-		t.Errorf("should be 0xF800, but it 0x%X", res)
-	}
+var _ = Describe("test the hat package", func() {
+	Context("test toHatColor", func() {
+		It("should convert 0xFFFFFF", func() {
+			Expect(toHatColor(0xFFFFFF)).Should(BeEquivalentTo(0xFFFF))
+		})
 
-	if res := toHatColor(0b000000000000001100000000); res != 0 {
-		t.Errorf("should be 0, but it 0x%X", res)
-	}
+		It("should ignore LSB", func() {
+			Expect(toHatColor(0b000001110000000000000000)).Should(BeEquivalentTo(0))
+			Expect(toHatColor(0b000000000000001100000000)).Should(BeEquivalentTo(0))
+			Expect(toHatColor(0b000000000000000000000111)).Should(BeEquivalentTo(0))
+			Expect(toHatColor(0b000001110000001100000111)).Should(BeEquivalentTo(0))
+		})
 
-	if res := toHatColor(0b000000001111110000000000); res != 0x07E0 {
-		t.Errorf("should be 0x07E0, but it 0x%X", res)
-	}
-}
+		It("should convert red", func() {
+			Expect(toHatColor(0b111110000000000000000000)).Should(BeEquivalentTo(0xF800))
+			Expect(toHatColor(0b111111110000000000000000)).Should(BeEquivalentTo(0xF800))
+		})
 
-func TestToHatColorBlue(t *testing.T) {
-	if res := toHatColor(0b000000000000000000000111); res != 0 {
-		t.Errorf("should be 0, but it 0x%X", res)
-	}
+		It("should convert green", func() {
+			Expect(toHatColor(0b000000001111110000000000)).Should(BeEquivalentTo(0x07E0))
+			Expect(toHatColor(0b000000001111111100000000)).Should(BeEquivalentTo(0x07E0))
+		})
 
-	if res := toHatColor(0b000000000000000011111000); res != 0x01F {
-		t.Errorf("should be 0x1F, but it 0x%X", res)
-	}
-}
+		It("should convert blue", func() {
+			Expect(toHatColor(0b000000000000000011111000)).Should(BeEquivalentTo(0x01F))
+			Expect(toHatColor(0b000000000000000011111111)).Should(BeEquivalentTo(0x01F))
+		})
+	})
+})

@@ -1,6 +1,64 @@
 package state
 
-import "testing"
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("test change", func() {
+	It("should be with length of 0 if it nil", func() {
+		var s *changeStack
+		Expect(s.len()).Should(Equal(0))
+
+		Expect(s.pop()).To(BeNil())
+	})
+
+	It("should be with length of 0 if it empty", func() {
+		var s changeStack
+		Expect(s.len()).Should(Equal(0))
+		Expect(s.pop()).To(BeNil())
+
+		s = changeStack{}
+		Expect(s.len()).Should(Equal(0))
+		Expect(s.pop()).To(BeNil())
+	})
+
+	It("should push to stack", func() {
+		s := changeStack{}
+		s.push(&Change{ToolName: "first"})
+		Expect(s.len()).Should(Equal(1))
+	})
+
+	It("should be a LIFO collection", func() {
+		s := changeStack{}
+
+		s.push(&Change{ToolName: "first"})
+		Expect(s.len()).Should(Equal(1))
+
+		s.push(&Change{ToolName: "second"})
+		Expect(s.len()).Should(Equal(2))
+
+		s.push(&Change{ToolName: "third"})
+		Expect(s.len()).Should(Equal(3))
+
+		chng := s.pop()
+		Expect(chng).ShouldNot(BeNil())
+		Expect(chng.ToolName).Should(Equal("third"))
+		Expect(s.len()).Should(Equal(2))
+
+		chng = s.pop()
+		Expect(chng).ShouldNot(BeNil())
+		Expect(chng.ToolName).Should(Equal("second"))
+		Expect(s.len()).Should(Equal(1))
+
+		chng = s.pop()
+		Expect(chng).ShouldNot(BeNil())
+		Expect(chng.ToolName).Should(Equal("first"))
+		Expect(s.len()).Should(Equal(0))
+
+		Expect(s.pop()).To(BeNil())
+	})
+})
 
 func (s *changeStack) len() int {
 	if s == nil {
@@ -13,37 +71,4 @@ func (s *changeStack) len() int {
 	}
 
 	return res
-}
-
-func TestChangeStack(t *testing.T) {
-	s := changeStack{}
-	if s.len() != 0 {
-		t.Errorf("should be empty")
-	}
-
-	s.push(&Change{ToolName: "first"})
-	if s.len() != 1 {
-		t.Errorf("should be with len of 1")
-	}
-	s.push(&Change{ToolName: "second"})
-	if s.len() != 2 {
-		t.Errorf("should be with len of 2")
-	}
-
-	// check LIFO:
-	chng := s.pop()
-	if chng == nil {
-		t.Fatal("should no be bil")
-	}
-	if chng.ToolName != "second" {
-		t.Errorf("chng.ToolName should be 'second'")
-	}
-	chng = s.pop()
-	if chng.ToolName != "first" {
-		t.Errorf("chng.ToolName should be 'first'")
-	}
-	chng = s.pop()
-	if chng != nil {
-		t.Error("chng should be nil")
-	}
 }

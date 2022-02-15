@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/nunnatsa/piHatDraw/controller"
 	"github.com/nunnatsa/piHatDraw/notifier"
 	"github.com/nunnatsa/piHatDraw/webapp"
-
-	"github.com/nunnatsa/piHatDraw/controller"
 )
 
 var (
