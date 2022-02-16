@@ -61,6 +61,8 @@ func main() {
 	defer n.Close()
 
 	clientEvents := make(chan webapp.ClientEvent, 1)
+	defer close(clientEvents)
+
 	webApplication := webapp.NewWebApplication(n, clientEvents)
 
 	portStr := fmt.Sprintf(":%d", port)
@@ -68,6 +70,7 @@ func main() {
 
 	control := controller.NewController(n, clientEvents, canvasWidth, canvasHeight)
 	done := control.Start()
+
 	go func() {
 		<-done
 		if err := server.Shutdown(context.Background()); err != nil {
@@ -80,5 +83,4 @@ func main() {
 	} else {
 		fmt.Println("\nGood Bye!")
 	}
-
 }
