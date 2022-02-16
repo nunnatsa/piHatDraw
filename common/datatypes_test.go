@@ -67,5 +67,21 @@ var _ = Describe("Test the common package", func() {
 			Expect(json.Unmarshal([]byte(`["#ff0000", "#00ff00", "#0000ff"]`), &c)).ToNot(HaveOccurred())
 			Expect(c).Should(Equal([]Color{0xFF0000, 0x00FF00, 0x0000FF}))
 		})
+
+		It("should return error if the json format is wrong", func() {
+			var c *Color
+			Expect(json.Unmarshal([]byte(`"#ff0000`), c)).To(HaveOccurred())
+			Expect(c).Should(BeNil())
+		})
+
+		It("should return error if the HTML format is wrong", func() {
+			var cs []Color
+			Expect(json.Unmarshal([]byte(`["ff0000"]`), &cs)).To(HaveOccurred())
+
+			var c *Color
+			err := json.Unmarshal([]byte(`"#ff00"`), c)
+			Expect(err).To(HaveOccurred())
+			Expect(c).Should(BeNil())
+		})
 	})
 })
