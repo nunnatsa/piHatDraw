@@ -61,7 +61,7 @@ func main() {
 	defer n.Close()
 
 	clientEvents := make(chan webapp.ClientEvent, 1)
-	webApplication := webapp.NewWebApplication(n, port, clientEvents)
+	webApplication := webapp.NewWebApplication(n, clientEvents)
 
 	portStr := fmt.Sprintf(":%d", port)
 	server := http.Server{Addr: portStr, Handler: webApplication.GetMux()}
