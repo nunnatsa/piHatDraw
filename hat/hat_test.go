@@ -1,6 +1,9 @@
 package hat
 
 import (
+	"os"
+	"path"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -40,4 +43,68 @@ var _ = Describe("test the hat package", func() {
 			Expect(toHatColor(0b000000000000000011111111)).Should(BeEquivalentTo(0x01F))
 		})
 	})
+
+	Context("test findJoystickDeviceFile", func() {
+		origFunc := getDevicesFilePath
+
+		AfterEach(func() {
+			getDevicesFilePath = origFunc
+		})
+
+		It("should return the the event file name from a valid file", func() {
+			getDevicesFilePath = func() string {
+				return path.Join(getTestFileLocation(), "validDeviceFile.txt")
+			}
+
+			eventFileName, err := findJoystickDeviceFile()
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(eventFileName, "input2")
+		})
+
+		It("should return error if can't find the device in the file", func() {
+			getDevicesFilePath = func() string {
+				return path.Join(getTestFileLocation(), "notFoundDeviceFile.txt")
+			}
+
+			_, err := findJoystickDeviceFile()
+			Expect(err).Should(HaveOccurred())
+		})
+
+		It("should return error if can't find the device name in the file", func() {
+			getDevicesFilePath = func() string {
+				return path.Join(getTestFileLocation(), "noDevNameDeviceFile.txt")
+			}
+
+			_, err := findJoystickDeviceFile()
+			Expect(err).Should(HaveOccurred())
+		})
+
+		It("should return error if can't find the event name in the file", func() {
+			getDevicesFilePath = func() string {
+				return path.Join(getTestFileLocation(), "noEventNameDeviceFile.txt")
+			}
+
+			_, err := findJoystickDeviceFile()
+			Expect(err).Should(HaveOccurred())
+		})
+
+		It("should return error if can't find the devices file", func() {
+			getDevicesFilePath = func() string {
+				return path.Join(getTestFileLocation(), "notExistsFile")
+			}
+
+			_, err := findJoystickDeviceFile()
+			Expect(err).Should(HaveOccurred())
+			Expect(os.IsNotExist(err)).Should(BeTrue())
+		})
+	})
 })
+
+func getTestFileLocation() string {
+	wd, err := os.Getwd()
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	if strings.HasSuffix(wd, "hat") {
+		return path.Join(wd, "testFiles")
+	}
+	return path.Join(wd, "hat", "testFiles")
+}
