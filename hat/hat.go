@@ -1,7 +1,11 @@
 package hat
 
 import (
+	"bufio"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/nathany/bobblehat/sense/screen"
 	"github.com/nathany/bobblehat/sense/screen/color"
@@ -34,8 +38,6 @@ func toHatColor(c common.Color) color.Color {
 
 	return r | g | b
 }
-
-const defaultJoystickFile = "/dev/input/event0"
 
 // Joystick events
 type Event uint8
@@ -88,14 +90,20 @@ func (h *Hat) Stop() {
 }
 
 func (h *Hat) init() {
-	var err error
-	h.input, err = stick.Open(defaultJoystickFile)
+	joystickFile, err := findJoystickDeviceFile()
 	if err != nil {
-		log.Panic("can't open "+defaultJoystickFile, err)
+		fmt.Fprintln(os.Stderr, "Can't find the device event file for the Sense Hat joystick")
+		os.Exit(1)
+	}
+	h.input, err = stick.Open(joystickFile)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can't open '%s'; %v\n", joystickFile, err)
+		os.Exit(1)
 	}
 
 	if err = screen.Clear(); err != nil {
-		log.Panic("can't clear the HAT display", err)
+		fmt.Fprintln(os.Stderr, "Can't clear the HAT display", err)
+		os.Exit(1)
 	}
 }
 
@@ -162,4 +170,55 @@ func (h Hat) gracefulShutDown() {
 	screen.Clear()
 	// signal the controller we've done
 	close(h.events)
+}
+
+const (
+	devicesFilePath  = "/proc/bus/input/devices"
+	eventFilePrefix  = "/dev/input/"
+	handlerPrefix    = "H: Handlers=kbd "
+	expectedNameLine = `N: Name="Raspberry Pi Sense HAT Joystick"`
+)
+
+var getDevicesFilePath = func() string {
+	return devicesFilePath
+}
+
+func findJoystickDeviceFile() (string, error) {
+	devicesFile, err := os.Open(getDevicesFilePath())
+	if err != nil {
+		return "", err
+	}
+	defer devicesFile.Close()
+
+	scanner := bufio.NewScanner(devicesFile)
+	foundDevice := false
+	deviceName := ""
+
+	// scan the file to find the joystick device event name
+	// there is an empty line between devices.
+	// we're looking two line in one device, one with the device name and one with the device handler.
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 { // empty line indicates end of device
+			// start scanning new device
+			foundDevice = false
+			deviceName = ""
+		} else if line == expectedNameLine {
+			foundDevice = true
+			if len(deviceName) > 0 {
+				break // found
+			}
+		} else if strings.HasPrefix(line, handlerPrefix) {
+			deviceName = strings.Trim(strings.TrimPrefix(line, handlerPrefix), " ")
+			if foundDevice {
+				break // found
+			}
+		}
+	}
+
+	if foundDevice && len(deviceName) > 0 {
+		return eventFilePrefix + deviceName, nil // found
+	} else {
+		return "", fmt.Errorf("can't find the joystick device")
+	}
 }

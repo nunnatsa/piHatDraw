@@ -1,0 +1,34 @@
+I: Bus=001e Vendor=0000 Product=0000 Version=0001
+N: Name="vc4"
+P: Phys=vc4/input0
+S: Sysfs=/devices/platform/soc/fef00700.hdmi/rc/rc0/input4
+U: Uniq=
+H: Handlers=kbd event0
+B: PROP=20
+B: EV=100017
+B: KEY=ffffc000000000 3ff 0 400000320fc200 40830c900000000 0 210300 49d2c040ec00 1e378000000000 8010000010000000
+B: REL=3
+B: MSC=10
+
+I: Bus=001e Vendor=0000 Product=0000 Version=0001
+N: Name="vc4"
+P: Phys=vc4/input0
+S: Sysfs=/devices/platform/soc/fef05700.hdmi/rc/rc1/input5
+U: Uniq=
+H: Handlers=kbd event1
+B: PROP=20
+B: EV=100017
+B: KEY=ffffc000000000 3ff 0 400000320fc200 40830c900000000 0 210300 49d2c040ec00 1e378000000000 8010000010000000
+B: REL=3
+B: MSC=10
+
+I: Bus=0018 Vendor=0000 Product=0000 Version=0000
+N: Name="Raspberry Pi Sense HAT Joystick"
+P: Phys=rpi-sense-joy/input0
+S: Sysfs=/devices/virtual/input/input6
+U: Uniq=
+H: Handlers=kbd event2
+B: PROP=0
+B: EV=100003
+B: KEY=168000000000 10000000
+
