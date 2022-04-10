@@ -44,7 +44,7 @@ export default {
   },
 
   mounted: function() {
-    console.log(`Starting connection to WebSocket Server on ${location.host}`)
+    console.log(`Starting connection to WebSocket Server on ${window.location.host}`)
     const wsURL = `ws://${location.host}/api/canvas/register`;
 
     this.connection = new WebSocket(wsURL)

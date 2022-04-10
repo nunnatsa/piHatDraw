@@ -1,11 +1,6 @@
 <template>
   <v-card width="380" class="mx-auto my-12" align="center" color="#aaaaee">
     <v-card-text>
-      <v-row>
-        <v-col>
-          <ColorPickerWrapper v-if="!$store.state.initializing" :color="$store.state.color" :disabled="disabled"/>
-        </v-col>
-      </v-row>
       <v-spacer/>
       <v-row>
         <v-col>
@@ -24,6 +19,7 @@
                     Pick Cursor Color
                   </v-btn>
                 </v-col>
+                <ColorButton v-if="!$store.state.initializing"  :color="$store.state.color" :disabled="disabled"/>
               </v-row>
               <v-spacer/>
               <v-row>
@@ -53,15 +49,15 @@
 
 <script>
 import ToolSelector from "./ToolSelector";
-import ColorPickerWrapper from "./ColorPickerWrapper";
 import store from '../store'
 import HatService from '../services'
 import ResetButton from "./ResetButton";
 import DownloadButton from "./DownloadButton";
+import ColorButton from "@/components/ColorButton";
 
 export default {
   name: "Controls",
-  components: {ResetButton, ColorPickerWrapper, ToolSelector, DownloadButton},
+  components: {ColorButton, ResetButton, ToolSelector, DownloadButton},
   props: [
       "disabled",
   ],
