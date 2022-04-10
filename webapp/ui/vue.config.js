@@ -3,6 +3,7 @@ module.exports = {
     'vuetify'
   ],
   devServer: {
-    "proxy": "http://pihatdraw:8080/"
+    "proxy": "http://raspberrypi:8080/"
+    // "proxy": "http://pihatdraw:8080/"
   }
 }
