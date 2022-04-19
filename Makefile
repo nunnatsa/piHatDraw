@@ -14,7 +14,8 @@ build-backend: test
 build: build-ui build-backend
 
 test:
-	go test ./...
+	go install github.com/onsi/ginkgo/v2/ginkgo@latest
+	ginkgo -r .
 
 .PHONY: build \
         test \
