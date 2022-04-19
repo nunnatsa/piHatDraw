@@ -23,10 +23,9 @@ type Interface interface {
 // green and the 5 LB bits are blue
 // rrrrrggggggbbbbb
 const (
-	redColor color.Color  = 0b1111100000000000
-	rmask    common.Color = 0b111110000000000000000000
-	gmask    common.Color = 0b000000001111110000000000
-	bmask    common.Color = 0b000000000000000011111000
+	rmask common.Color = 0b111110000000000000000000
+	gmask common.Color = 0b000000001111110000000000
+	bmask common.Color = 0b000000000000000011111000
 )
 
 // to convert 24-bit color to 16-bit color, we are taking only the 5 (for red and
@@ -167,7 +166,7 @@ func reversColor(c color.Color) color.Color {
 }
 
 func (h Hat) gracefulShutDown() {
-	screen.Clear()
+	_ = screen.Clear()
 	// signal the controller we've done
 	close(h.events)
 }
