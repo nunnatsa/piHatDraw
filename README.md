@@ -13,6 +13,10 @@ The full picture can be viewed using a web browser. The web display also contain
 
 The application is written in golang. It's an event driven application. It uses webSockets to keep the web display in sync, and a web application to handle requests from the web client.
 
+## Demo
+[<img src="https://i3.ytimg.com/vi/2IngYHPHjtc/maxresdefault.jpg" width="50%">](https://youtu.be/2IngYHPHjtc "click for video with the demo")
+
+## Source COde Tutorial
 I wrote a blog post series with a tutorial to guide how to build this application.
 
 For each post, there is a coresponding tag with the relevant code:
@@ -25,6 +29,3 @@ For each post, there is a coresponding tag with the relevant code:
 * [Chapter 6: Undo](https://nunnatsa.github.io/piHatDraw/ch6.html) - [v0.0.6](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.6)
 * [Chapter 7: The Bucket Tool](https://nunnatsa.github.io/piHatDraw/ch7.html) - [v0.0.7](https://github.com/nunnatsa/piHatDraw/releases/tag/v0.0.7)
 * Working on the next chapter: Replacing the UI to vue and vuetify, and compiling for another architecture.
-
-## Demo
-[<img src="https://i3.ytimg.com/vi/2IngYHPHjtc/maxresdefault.jpg" width="50%">](https://youtu.be/2IngYHPHjtc "click for video with the demo")
