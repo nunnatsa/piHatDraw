@@ -1,8 +1,8 @@
 .ONESHELL:
 
 build-ui:
-	cd webapp/ui
-	yarn install
+	cd webapp/ui && \
+	yarn install && \
 	yarn build --dest ../site
 
 build-backend: test

@@ -8,18 +8,18 @@ import (
 var _ = Describe("test change", func() {
 	It("should be with length of 0 if it nil", func() {
 		var s *changeStack
-		Expect(s.len()).Should(Equal(0))
+		Expect(s.len()).Should(BeZero())
 
 		Expect(s.pop()).To(BeNil())
 	})
 
 	It("should be with length of 0 if it empty", func() {
 		var s changeStack
-		Expect(s.len()).Should(Equal(0))
+		Expect(s.len()).Should(BeZero())
 		Expect(s.pop()).To(BeNil())
 
 		s = changeStack{}
-		Expect(s.len()).Should(Equal(0))
+		Expect(s.len()).Should(BeZero())
 		Expect(s.pop()).To(BeNil())
 	})
 
@@ -54,7 +54,7 @@ var _ = Describe("test change", func() {
 		chng = s.pop()
 		Expect(chng).ShouldNot(BeNil())
 		Expect(chng.ToolName).Should(Equal("first"))
-		Expect(s.len()).Should(Equal(0))
+		Expect(s.len()).Should(BeZero())
 
 		Expect(s.pop()).To(BeNil())
 	})

@@ -83,7 +83,7 @@ var _ = Describe("test state", func() {
 			Expect(change.Cursor.Y).Should(BeEquivalentTo(y - 1))
 			Expect(change.Cursor.X).Should(BeEquivalentTo(x))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 
 		It("should ignore if the cursor is at the top of the canvas", func() {
@@ -93,7 +93,7 @@ var _ = Describe("test state", func() {
 			Expect(s.cursor.Y).Should(BeEquivalentTo(0))
 			Expect(s.cursor.X).Should(BeEquivalentTo(x))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 	})
 
@@ -112,7 +112,7 @@ var _ = Describe("test state", func() {
 			Expect(change.Cursor.Y).Should(BeEquivalentTo(y + 1))
 			Expect(change.Cursor.X).Should(BeEquivalentTo(x))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 
 		It("should ignore if the cursor is at the bottom of the canvas", func() {
@@ -122,7 +122,7 @@ var _ = Describe("test state", func() {
 			Expect(s.cursor.Y).Should(BeEquivalentTo(canvasHeight - 1))
 			Expect(s.cursor.X).Should(BeEquivalentTo(x))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 	})
 
@@ -141,7 +141,7 @@ var _ = Describe("test state", func() {
 			Expect(change.Cursor.Y).Should(BeEquivalentTo(y))
 			Expect(change.Cursor.X).Should(BeEquivalentTo(x - 1))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 
 		It("should ignore if the cursor is at the most left column of the canvas", func() {
@@ -151,7 +151,7 @@ var _ = Describe("test state", func() {
 			Expect(s.cursor.Y).Should(BeEquivalentTo(y))
 			Expect(s.cursor.X).Should(BeEquivalentTo(0))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 	})
 
@@ -170,7 +170,7 @@ var _ = Describe("test state", func() {
 			Expect(change.Cursor.Y).Should(BeEquivalentTo(y))
 			Expect(change.Cursor.X).Should(BeEquivalentTo(x + 1))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 
 		It("should ignore if the cursor is at the most right column of the canvas", func() {
@@ -180,7 +180,7 @@ var _ = Describe("test state", func() {
 			Expect(s.cursor.Y).Should(BeEquivalentTo(y))
 			Expect(s.cursor.X).Should(BeEquivalentTo(canvasWidth - 1))
 
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 	})
 
@@ -212,7 +212,7 @@ var _ = Describe("test state", func() {
 			change = undoList.pop()
 			Expect(change.Pixels).Should(HaveLen(1))
 			Expect(change.Pixels[0]).Should(Equal(Pixel{X: s.cursor.X, Y: s.cursor.Y, Color: common.Color(0)}))
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 		})
 
 		It("should ignore if painting with the same color at the same place", func() {
@@ -229,7 +229,7 @@ var _ = Describe("test state", func() {
 			s.cursor.X = canvasWidth
 			change := s.Paint()
 			Expect(change).To(BeNil())
-			Expect(undoList.len()).Should(Equal(0))
+			Expect(undoList.len()).Should(BeZero())
 
 			s.cursor.X = canvasWidth / 2
 			s.cursor.Y = canvasHeight
