@@ -3,7 +3,8 @@ package webapp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	//"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	neturl "net/url"
@@ -206,7 +207,7 @@ var _ = Describe("Test the web application", func() {
 			Eventually(func() bool {
 				defer res.Body.Close()
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(body).ToNot(BeEmpty())
 				fileType := string(body[:4])
