@@ -27,8 +27,8 @@
         <v-card-text>
           <v-color-picker
               v-model="selectedColor"
-              mode="hexa"
-              hide-inputs
+              mode="hex"
+              hide-inputs="true"
               elevation="4"
               flat
               :disabled="disabled"

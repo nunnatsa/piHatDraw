@@ -1,10 +1,7 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import {createStore} from 'vuex'
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
-
+export const store = createStore({
+    state: {initializing: true},
     mutations: {
         replace(state, data) {
             let newState = Object.assign({}, state)
@@ -51,7 +48,6 @@ export default new Vuex.Store({
             this.replaceState(newState)
         }
     },
-    state: {initializing: true},
     actions: {},
     modules: {
     }

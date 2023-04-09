@@ -62,7 +62,7 @@ var _ = Describe("test notifier", func() {
 
 		Eventually(ch).Should(BeClosed())
 
-		Expect(notifier.clientMap).To(HaveLen(0))
+		Expect(notifier.clientMap).To(BeEmpty())
 	})
 
 	It("should notify all", func() {

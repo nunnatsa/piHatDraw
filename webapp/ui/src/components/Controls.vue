@@ -49,7 +49,7 @@
 
 <script>
 import ToolSelector from "./ToolSelector";
-import store from '../store'
+import {store} from '../store'
 import HatService from '../services'
 import ResetButton from "./ResetButton";
 import DownloadButton from "./DownloadButton";
