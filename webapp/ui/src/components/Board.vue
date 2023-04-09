@@ -1,27 +1,31 @@
 <template>
-  <v-container fluid>
-    <v-row>
-      <v-col align="center">
+  <v-container fluid class="text-center">
+    <v-row class="text-center">
+      <v-col align-self="center">
         <Controls :disabled="gameOver" />
       </v-col>
-      <v-col align="center">
+      <v-col align-self="center">
         <Canvas />
       </v-col>
     </v-row>
-    <v-row>
-      <v-col align="center">
+    <v-row class="text-center">
+      <v-col />
+      <v-col class="text-center" align-self="center">
         <v-alert
-            :value="gameOver"
+            :model-value="gameOver"
             color="#8888ee"
             transition="scale-transition"
             elevation="2"
             width="25em"
+            closable="true"
         >
+          <v-alert-title>Bye!</v-alert-title>
           <p class="alert-text">The piHatDraw application was closed on the raspberry pi or we just lost connection with it.</p>
           <p class="bye-text">
             Thanks for using piHatDraw. See you next time!</p>
         </v-alert>
       </v-col>
+      <v-col />
     </v-row>
   </v-container>
 </template>

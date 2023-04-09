@@ -3,7 +3,7 @@
 build-ui:
 	cd webapp/ui && \
 	yarn install && \
-	yarn build --dest ../site
+	yarn build --outDir ../site
 
 build-backend: test
 	env GOOS=linux GOARCH=arm go build -o piHatDraw .

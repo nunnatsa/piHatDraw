@@ -22,69 +22,69 @@
     </v-app-bar>
 
     <v-main v-if="$store.state.canvas">
-      <Board :gameOver="gameOver" />
+      <Board :gameOver="gameOver"/>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import Board from './components/Board';
-import store from './store'
-import HatService from './services'
+  import Board from "./components/Board.vue"
+  import {store} from './store'
+  import HatService from './services'
 
-export default {
+  export default {
 
-  name: 'App',
-  metaInfo: {
-    // if no subcomponents specify a metaInfo.title, this title will be used
-    title: 'Pi HAT Draw',
-  },
-  components: {
-    Board
-  },
+    name: 'App',
+    metaInfo: {
+      // if no subcomponents specify a metaInfo.title, this title will be used
+      title: 'Pi HAT Draw',
+    },
+    components: {
+      Board
+    },
 
-  mounted: function() {
-    console.log(`Starting connection to WebSocket Server on ${window.location.host}`)
-    const wsURL = `ws://${location.host}/api/canvas/register`;
+    mounted: function() {
+      console.log(`Starting connection to WebSocket Server on ${window.location.host}`)
+      const wsURL = `ws://${location.host}/api/canvas/register`;
 
-    this.connection = new WebSocket(wsURL)
+      this.connection = new WebSocket(wsURL)
 
-    this.connection.onmessage = function(event) {
-      HatService.init()
-      const data = JSON.parse(event.data)
-      console.log("data: " + JSON.stringify(data))
+      this.connection.onmessage = function(event) {
+        HatService.init()
+        const data = JSON.parse(event.data)
+        console.log("data: " + JSON.stringify(data))
 
-      if (data) {
-        store.commit('replace', data)
+        if (data) {
+          store.commit('replace', data)
+        }
       }
-    }
 
-    this.connection.onclose = (event) => {
-      console.log(event)
-      this.gameOver = true
-    }
+      this.connection.onclose = (event) => {
+        console.log(event)
+        this.gameOver = true
+      }
 
-    this.connection.onopen = function(event) {
-      console.log(event)
-      console.log("Successfully connected to the echo websocket server...")
-    }
+      this.connection.onopen = function(event) {
+        console.log(event)
+        console.log("Successfully connected to the echo websocket server...")
+      }
 
-  },
+    },
 
-  data: () => ({
-    gameOver: false
-  }),
+    data: () => ({
+      gameOver: false
+    }),
 
-};
+  };
 </script>
 
 <style>
-  .v-main__wrap {
-    background-color: #ccccff;
-  }
+.v-main__wrap {
+  background-color: #ccccff;
+}
 
-  .main-title {
-    color: #ddddff;
-    text-shadow: 2px 2px #8888cc
-  }
+.main-title {
+  color: #ddddff;
+  text-shadow: 2px 2px #8888cc
+}
 </style>
