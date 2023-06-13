@@ -58,7 +58,7 @@ var _ = Describe("test the hat package", func() {
 
 			eventFileName, err := findJoystickDeviceFile()
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(eventFileName, "input2")
+			Expect(eventFileName).To(Equal("/dev/input/event2"))
 		})
 
 		It("should return error if can't find the device in the file", func() {
