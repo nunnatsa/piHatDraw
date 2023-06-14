@@ -217,7 +217,6 @@ func findJoystickDeviceFile() (string, error) {
 
 	if foundDevice && len(deviceName) > 0 {
 		return eventFilePrefix + deviceName, nil // found
-	} else {
-		return "", fmt.Errorf("can't find the joystick device")
 	}
+	return "", fmt.Errorf("can't find the joystick device")
 }
