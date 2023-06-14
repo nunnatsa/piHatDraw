@@ -57,7 +57,7 @@ func (c *Controller) do() {
 	c.screenEvents <- msg
 
 	for {
-		var change *state.Change = nil
+		var change *state.Change
 
 		select {
 		case <-signals:

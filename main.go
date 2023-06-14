@@ -80,7 +80,6 @@ func main() {
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Panic(err)
-	} else {
-		fmt.Println("\nGood Bye!")
 	}
+	fmt.Println("\nGood Bye!")
 }

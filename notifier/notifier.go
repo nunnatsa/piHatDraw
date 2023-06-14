@@ -10,7 +10,7 @@ type idProvider struct {
 	counter uint64
 }
 
-func newIdProvider() *idProvider {
+func newIDProvider() *idProvider {
 	return &idProvider{
 		counter: 0,
 	}
@@ -29,7 +29,7 @@ type Notifier struct {
 func NewNotifier() *Notifier {
 	return &Notifier{
 		clientMap: make(map[uint64]chan []byte),
-		idp:       newIdProvider(),
+		idp:       newIDProvider(),
 		lock:      &sync.Mutex{},
 	}
 }
